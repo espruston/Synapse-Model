@@ -1,0 +1,25 @@
+% parameter space probe script
+
+%vesicle maturation
+
+frequencies = [10:1:100]; %range of frequencies probed
+
+t_1 = (0.01:0.01:12); %range of stage 0 -> 1 time constant (s)
+t_2 = (0.01:0.01:12); %range of stage 1 -> 2 time constant (s)
+t_3 = (0.01:0.01:12); %range of stage 2 -> 3 time constant (s)
+
+p_1 = (0.001:0.001:1); %range of probabilities for release of stage 1
+p_2 = (0.001:0.001:1); %range of probabilities for release of stage 2
+p_3 = (0.001:0.001:1); %range of probabilities for release of stage 3
+
+len_f = size(frequencies,2);
+
+len_t_1 = size(t_1,2);
+len_t_2 = size(t_2,2);
+len_t_3 = size(t_3,2);
+
+len_p_1 = size(p_1,2);
+len_p_2 = size(p_2,2);
+len_p_3 = size(p_3,2);
+
+for i_t_1 = 

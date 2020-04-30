@@ -1,0 +1,10 @@
+current = zeros(100,101);
+Hz = zeros(1,100
+for i = 1:100
+    
+    two_pool_mat = Two_Pool_Model_func(i*10, .14, 0.023, 0, 0.035, 30, 70, 100, -1, 7.5, 0.28, 0.125);
+    current(i,:) = two_pool_mat(:,13)/min(two_pool_mat(:,13)); %normalized current
+    Hz(i) = i*10;
+end
+
+line(Hz,current(100,:))
