@@ -87,7 +87,8 @@ classdef Synaptic_Model_Comparison_exported < matlab.apps.AppBase
 
         % Button pushed function: SetParametersButton
         function SetParametersButtonPushed(app, event)
-            app.UITable.Data = Vesicle_maturation_model_func(app.FrequencyHzEditField.Value, app.Stage01CharacteristicTimesEditField.Value, app.Stage12CharacteristicTimesEditField.Value, app.Stage23CharacteristicTimesEditField.Value, app.ProbabilityofReleaseStage1EditField.Value, app.ProbabilityofReleaseStage2EditField.Value, app.ProbabilityofReleaseStage3EditField.Value, app.NumberofVesiclestotalEditField.Value, app.NumberofPulsesEditField.Value, app.CurrentperVesicleEditField.Value);    
+            v = [app.FrequencyHzEditField.Value, app.Stage01CharacteristicTimesEditField.Value, app.Stage12CharacteristicTimesEditField.Value, app.Stage23CharacteristicTimesEditField.Value, app.ProbabilityofReleaseStage1EditField.Value, app.ProbabilityofReleaseStage2EditField.Value, app.ProbabilityofReleaseStage3EditField.Value, app.NumberofVesiclestotalEditField.Value, app.NumberofPulsesEditField.Value, app.CurrentperVesicleEditField.Value];
+            app.UITable.Data = Vesicle_maturation_model_func(v);    
         end
 
         % Value changed function: DependentVariableDropDown
