@@ -7,7 +7,7 @@ Turecek et al., 2016, Cell Reports 17, 3256–3268
 December 20, 2016
 http://dx.doi.org/10.1016/j.celrep.2016.11.081
 
-To run the model, simply download Two_Pool_Model_func.m, Vesicle_maturation_model_func.m, and Synaptic_Model_Comparison_exported.m. Then open and run Synaptic_Model_Comparison_exported.m from Matlab.
+**To run the model, simply download Two_Pool_Model_func.m, Vesicle_maturation_model_func.m, and Synaptic_Model_Comparison_exported.m. Then open and run Synaptic_Model_Comparison_exported.m from Matlab.**
 
 *Disclaimer: Two_Pool_Model_func.m is not the two pool model demonstrated in Turcek et al. 2016. It contains many of the same properties but appears to be missing some details. As such, the results using the parameters given in the Supplement of Turcek et al. will not match the results presented in their paper.*
 
