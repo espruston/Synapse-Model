@@ -15,4 +15,4 @@ The app should launch and bring you to a screen where you can freely change all 
 
 If you want to plot new parameters, simply enter the new parameters and then click the "Set Parameters" button again. If you want to plot the variable which is currently selected in the dropdown, simply click the "Refresh" button and the plot should update. If you want to plot a different variable, simply select it from the dropdown menu and the plot should auto-update.
 
-Some screenshots of how the app should look (on Windows) are available under Synapse-Model/Examples
+Some screenshots of how the app should look (on Windows) are available under [Synapse-Model/Examples](Examples)
