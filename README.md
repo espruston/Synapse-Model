@@ -14,3 +14,5 @@ To run the model, simply download Two_Pool_Model_func.m, Vesicle_maturation_mode
 The app should launch and bring you to a screen where you can freely change all parameters. You can switch between the maturation model and the two pool model with the tab at the top of the app. After entering the desired values for each parameter, click the "Set Parameters" button. The plot to the right and the table below should auto-update after pressing "Set Parameters".
 
 If you want to plot new parameters, simply enter the new parameters and then click the "Set Parameters" button again. If you want to plot the variable which is currently selected in the dropdown, simply click the "Refresh" button and the plot should update. If you want to plot a different variable, simply select it from the dropdown menu and the plot should auto-update.
+
+Some screenshots of how the app should look (on Windows) are available under Synapse-Model/Examples
