@@ -1,7 +1,17 @@
 # Synapse-Model
-Synaptic facilitation models
+Short term synaptic plasticity models
 
-This is a model of synaptic vesicle release developed from the findings of Turcek et al. 2016:
+##Dittman Models
+These are models replicating the methods of Dittman et al. 2000:
+
+Dittman JS, Kreitzer AC, Regehr WG. Interplay between facilitation, depression, and residual calcium at three presynaptic terminals. J Neurosci. 2000;20(4):1374‐1385. doi:10.1523/JNEUROSCI.20-04-01374.2000
+
+**To run the model, simply download the desired model's .py file and call it using "python3 filename.py" in a bash interpreter. The necessary packages are found in the first few lines after the "import" keyword, these packages can be installed via pip/pip3 in your command line or from their respective source websites.**
+
+*These files were written for python3, back compatibility with python2.7 or earlier is not certain*
+
+##Two Pool and Maturation
+This is a comparison of the model of synaptic vesicle release developed from the findings of Turcek et al. 2016 as well as my own maturation model:
 
 Turecek et al., 2016, Cell Reports 17, 3256–3268
 December 20, 2016
