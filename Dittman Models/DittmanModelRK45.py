@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import numpy as np
-#import sys
 from scipy.integrate import solve_ivp
 from math import e
 
@@ -22,7 +21,7 @@ def dD_dt(t, D):
 
     return (1 - D)*k_recov_temp - D*F[0][int(t)-1]*(int(t) in stimulus_times) #eq 13
 
-if __name__ == "__main__": #when called by python interpreter as "python DittmanModel.py"
+if __name__ == "__main__": #when called by python interpreter as "python DittmanModelRK45.py"
 
     # if len(sys.argv) != 11: #incorrect number of arguments leads to exit and error message
     #     print 'ERROR! Call program as: DittmanModel.py F_1 T_D K_D N_T K_F T_F k_0 k_max delta_F delta_D'
@@ -53,10 +52,10 @@ if __name__ == "__main__": #when called by python interpreter as "python Dittman
         delta_D = args[9]
         T_E = args[10]
 
-        max_time = 300 #number in msec
+        max_time = 1300 #number in msec
         times = np.linspace(1,max_time,max_time,dtype=np.int32) #vector of length max_time denoting times from 1->max_time msec with step size 1
 
-        stimulus_times = [10,30,50,70,90,110,130,150,170,190] #vector containing times at which stimuli occur (in msec) !!make sure these values exist in times vector
+        stimulus_times = [10,30,50,70,90,110,130,150,170,190,1010,1030,1050,1070,1090,1110,1130,1150,1170,1190] #vector containing times at which stimuli occur (in msec) !!make sure these values exist in times vector
         max_step_size = 1
 
         CaX_F = solve_ivp(dCaX_F_dt, [0, max_time], [0], t_eval = stimulus_times, dense_output = True, first_step = stimulus_times[0], max_step = max_step_size) #solve dCaX_F_dt using RK45 starting from first stimulus w max step size 1

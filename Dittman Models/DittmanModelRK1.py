@@ -63,7 +63,7 @@ def calculate_EPSC(N_T, F, D, T_E):
 
     return EPSC, alpha
 
-if __name__ == "__main__": #when called by python interpreter as "python DittmanModel.py"
+if __name__ == "__main__": #when called by python interpreter as "python DittmanModelRK1.py"
 
     # if len(sys.argv) != 11: #incorrect number of arguments leads to exit and error message
     #     print 'ERROR! Call program as: DittmanModel.py F_1 T_D K_D N_T K_F T_F k_0 k_max delta_F delta_D'
