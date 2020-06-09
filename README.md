@@ -6,7 +6,7 @@ These are models replicating the methods of Dittman et al. 2000:
 
 Dittman JS, Kreitzer AC, Regehr WG. Interplay between facilitation, depression, and residual calcium at three presynaptic terminals. J Neurosci. 2000;20(4):1374‐1385. doi:10.1523/JNEUROSCI.20-04-01374.2000
 
-**To run the model, simply download the desired model's .py file and call it using "python3 filename.py" in a bash interpreter. The necessary packages are found in the first few lines after the "import" keyword, these packages can be installed via pip/pip3 in your command line or from their respective source websites.**
+**To run the model, simply download DittmanModels.py and run_model.py. Model parameters for given simulations are set in run_model.py, call a simulation using "python3 run_model.py" in a bash interpreter. Additional calls can be made to the four methods outlined in DittmanModels.py by importing the relevant class. The necessary packages are found in the first few lines after the "import" keyword, these packages can be installed via pip/pip3 in your command line or from their respective source websites.**
 
 *These files were written for python3, back compatibility with python2.7 or earlier is not certain*
 
