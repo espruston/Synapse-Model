@@ -10,7 +10,7 @@ class regular_train(object):
         #experiment-dependent
         self.stimulus_times = stimulus_times
         self.n_pulses = len(stimulus_times) #number of pulses to be simulated
-        self.r = (1000/np.diff(stimulus_times)[0])/1000 #Hz in msec
+        self.r = 1/np.diff(stimulus_times)[0] #Hz in msec
         self.max_time = max_time
         self.N_T = N_T #number of total release sites
 
@@ -46,7 +46,6 @@ class regular_train(object):
         else:
             self.F_ss = F_1 + (1 - F_1)/(1+(self.K_F/self.CaX_F_ss)) #eq 11
 
-
         self.xi_ss = ((self.K_D/self.CaX_D_ss + 1)/((self.K_D/self.CaX_D_ss) + e**(-1/(self.r*self.T_D))))**(-1*(self.k_max-self.k_0)*self.T_D) #modified eq 16
         self.D_ss = (1 - e**(-1*self.k_0/self.r)*self.xi_ss)/(1 - (1 - self.F_ss)*e**(-1*self.k_0/self.r)*self.xi_ss) #eq 20
         self.EPSC_norm_ss = self.D_ss*(self.F_ss/F_1) #eq 21
@@ -67,7 +66,7 @@ class regular_train(object):
             else:
                 self.xi.append(((self.K_D/self.CaX_D[-1] + 1)/((self.K_D/self.CaX_D[-1]) + e**(-1/(self.r*self.T_D))))**(-1*(self.k_max-self.k_0)*self.T_D)) #equation 16
 
-            self.D.append(1 - (1 - (1 - self.F[-2])*(self.D[-1]))*e**(self.k_0/self.r)*self.xi[-1]) #equation 15
+            self.D.append(1 - (1 - (1 - self.F[-2])*(self.D[-1]))*e**(-1*self.k_0/self.r)*self.xi[-1]) #equation 15
 
             self.EPSC.append(self.N_T*self.D[-1]*self.F[-1]) #eq 19
 
@@ -138,7 +137,7 @@ class poisson_train(object):
             else:
                 self.xi.append(((self.K_D/self.CaX_D[-2] + 1)/((self.K_D/self.CaX_D[-2]) + e**(-1/((1/self.delta_ts[i])*self.T_D))))**(-1*(self.k_max - self.k_0)*self.T_D)) #equation 16, 1/delta_t is the frequency in msec for defining the interval between pulse i and i-1
 
-            self.D.append(1 - (1 - (1 - self.F[-2])*(self.D[-1]))*e**(self.k_0/(1/self.delta_ts[i]))*self.xi[-1])
+            self.D.append(1 - (1 - (1 - self.F[-2])*(self.D[-1]))*e**(-1*self.k_0/(1/self.delta_ts[i]))*self.xi[-1])
 
             self.EPSC.append(self.N_T*self.D[-1]*self.F[-1])
 
