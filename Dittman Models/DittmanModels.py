@@ -24,21 +24,21 @@ class regular_train(object):
         self.K_D = K_D
 
         #testing parameters
-        self.K_F = delta_F*((1 - F_1)/((F_1/(1 - F_1))*roh - F_1) - 1) #affinity of CaX_f for release site
+        self.K_F = delta_F*((1 - F_1)/((F_1/(1 - F_1))*roh - F_1) - 1) #eq 7, affinity of CaX_f for release site
         self.delta_F = delta_F #amount of CaX_F increase as a result of stimulus
         self.delta_D = delta_D #amount of CaX_D increase as a result of stimulus
 
-        #assumed/explicit values
-        self.CaX_F = [0] #vector of CaX_F values which is populated by iterate_pulses, CaX_F = 0
-        self.F = [F_1] #vector of D values which is populated by iterate_pulses, F_1 determined by user input
-        self.CaX_D = [] #vector of CaX_D values which is populated by iterate_pulses
-        self.xi = [1] #vector of xi values which is populated by iterate_pulses, xi_1 = 1
-        self.D = [1] #vector of D values which is populated by iterate_pulses, D_1 = 1
-        self.EPSC = [] #vector of EPSC values normalized to the first pulse which is populated by iterate_pulses
+        #assumed/explicit values,
+        self.CaX_F = [] #vector of CaX_F values, CaX_F[0] = 0
+        self.F = [F_1] #vector of F values
+        self.CaX_D = [0] #vector of CaX_D values, CaX_D[0] is basically calculated twice (once here, and once in the loop) due to eq 17
+        self.xi = [] #vector of xi values, xi_1 = 1
+        self.D = [1] #vector of D values, D_1 = 1
+        self.EPSC = [] #vector of EPSC values
 
         #steady state values that are used in iteration
-        self.CaX_F_ss = self.delta_F*(e**(1/(self.r*self.T_F)) - 1)**(-1)
-        self.CaX_D_ss = self.delta_D*(1 - e**(-1/(self.r*self.T_D)))**(-1)
+        self.CaX_F_ss = self.delta_F*((e**(1/(self.r*self.T_F)) - 1)**(-1))
+        self.CaX_D_ss = self.delta_D*((1 - e**(-1/(self.r*self.T_D)))**(-1))
 
         #ss values used after iteration
         if self.CaX_F_ss == 0:
@@ -46,21 +46,25 @@ class regular_train(object):
         else:
             self.F_ss = F_1 + (1 - F_1)/(1+(self.K_F/self.CaX_F_ss)) #eq 11
 
-        self.xi_ss = ((self.K_D/self.CaX_D_ss + 1)/((self.K_D/self.CaX_D_ss) + e**(-1/(self.r*self.T_D))))**(-1*(self.k_max-self.k_0)*self.T_D) #modified eq 16
+        if self.CaX_D_ss == 0:
+            self.xi_ss = 1
+        else:
+            self.xi_ss = ((self.K_D/self.CaX_D_ss + 1)/((self.K_D/self.CaX_D_ss) + e**(-1/(self.r*self.T_D))))**(-1*(self.k_max-self.k_0)*self.T_D) #modified eq 16
         self.D_ss = (1 - e**(-1*self.k_0/self.r)*self.xi_ss)/(1 - (1 - self.F_ss)*e**(-1*self.k_0/self.r)*self.xi_ss) #eq 20
         self.EPSC_norm_ss = self.D_ss*(self.F_ss/F_1) #eq 21
 
-        for i in range(self.n_pulses): #i ranges from 0->npulses-1, so i should be itereated as i+1
+        for i in range(self.n_pulses): #i ranges from 0->npulses-1
 
-            self.CaX_F.append(self.CaX_F_ss*(1-e**(-1*(i)/(self.r*self.T_F)))) #eq 8
+            self.CaX_F.append(self.CaX_F_ss*(1-e**(-1*(i)/(self.r*self.T_F)))) #eq 8 amount of CaX_F just before current stimulus
 
             if self.CaX_F[-1] == 0:
                 self.F.append(self.F_1)
             else:
                 self.F.append(self.F_1 + (1 - self.F_1)/(1+(self.K_F/self.CaX_F[-1]))) #eq 10
 
-            self.CaX_D.append(self.CaX_D_ss*(1 - e**(-1*(i)/(self.r*self.T_D)))) #eq 17
+            self.CaX_D.append(self.CaX_D_ss*(1 - e**(-1*(i)/(self.r*self.T_D)))) #eq 17, actually CaX_D_(i-1) in the Dittman paper, amount of CaX_D just after previous pulse
 
+            #in calculating xi at pulse n = i, CaX_D[-1] defines CaX_D after pulse i (previous pulse)
             if self.CaX_D[-1] == 0:
                 self.xi.append(1)
             else:
@@ -68,7 +72,7 @@ class regular_train(object):
 
             self.D.append(1 - (1 - (1 - self.F[-2])*(self.D[-1]))*e**(-1*self.k_0/self.r)*self.xi[-1]) #equation 15
 
-            self.EPSC.append(self.N_T*self.D[-1]*self.F[-1]) #eq 19
+            self.EPSC.append(self.N_T*self.D[-1]*self.F[-1]) #eq 19, first pulse at stimulus_times[0]
 
 
         self.CaX_D.append(self.CaX_D_ss*(1 - e**(-1*(self.n_pulses-1)/(self.r*self.T_D)))) #calculate value after last pulse for the last pulse
@@ -114,12 +118,12 @@ class poisson_train(object):
         self.delta_D = delta_D #amount of CaX_D increase as a result of stimulus
 
         #assumed/explicit values
-        self.CaX_F = [0] #vector of CaX_F values which is populated by iterate_pulses, CaX_F = 0
-        self.F = [F_1] #vector of D values which is populated by iterate_pulses, F_1 determined by user input
-        self.CaX_D = [0] #vector of CaX_D values which is populated by iterate_pulses
-        self.xi = [1] #vector of xi values which is populated by iterate_pulses, xi_1 = 1
-        self.D = [1] #vector of D values which is populated by iterate_pulses, D_1 = 1
-        self.EPSC = [] #vector of EPSC values normalized to the first pulse which is populated by iterate_pulses
+        self.CaX_F = [0] #vector of CaX_F values, CaX_F = 0
+        self.F = [F_1] #vector of D values, F_1 determined by user input
+        self.CaX_D = [0] #vector of CaX_D values
+        self.xi = [1] #vector of xi values, xi_1 = 1
+        self.D = [1] #vector of D values, D_1 = 1
+        self.EPSC = [] #vector of EPSC values normalized to the first pulse
 
         for i in range(len(self.stimulus_times)):
 
@@ -219,6 +223,8 @@ class DittmanRK1(object):
             #dD_dt = (1 - D[t-1])*k_recov/1000 - D[t-1]*F[t-1]*stimuli[t-1]
             self.D[t] = self.D[t-1] + dD_dt
 
+        self.EPSC = self.F[(self.stimulus_times)-1]*self.D[(self.stimulus_times)-1]
+
         alpha_1 = (self.times*e/T_E)*e**(-1*self.times/T_E) #reference alpha function
         self.alpha = np.zeros(self.max_time) #functional alpha function
 
@@ -284,6 +290,8 @@ class DittmanRK45(object):
         self.k_recov = (self.k_max - self.k_0)/(1 + self.K_D/(self.CaX_D.sol(self.times)[0] + 1e-30*(self.CaX_D.sol(self.times)[0] == 0))) + self.k_0
         self.D_object = solve_ivp(dD_dt, [0, max_time], [1], t_eval = stimulus_times, dense_output = True, first_step = stimulus_times[0], max_step = self.max_step_size) #solve dD_dt using RK45 starting from first stimulus w max step size 1
         self.D = self.D_object.sol(self.times)[0]
+
+        self.EPSC = self.F[(self.stimulus_times)-1]*self.D[(self.stimulus_times)-1]
 
         alpha_1 = (self.times*e/T_E)*e**(-1*self.times/T_E) #reference alpha function
         self.alpha = np.zeros(self.max_time) #functional alpha function

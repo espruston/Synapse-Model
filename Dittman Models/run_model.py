@@ -1,7 +1,6 @@
 import numpy as np
 from DittmanModels import regular_train, poisson_train, DittmanRK1, DittmanRK45
 from matplotlib import pyplot as plt
-from scipy.interpolate import interp1d
 
 if __name__ == "__main__":
 
@@ -21,7 +20,7 @@ if __name__ == "__main__":
     else:
         stimulus_times = np.linspace(1000/r,(1000/r)*n_pulses,n_pulses, dtype = int)
         #vector containing times at which stimuli occur (in msec) !!make sure these values exist in times vector [0,1,2,...,max_time]
-    max_time = 320 #msec, used in plotting
+    max_time = int(1000/r*(n_pulses+3)) #msec, used in plotting
     N_T = 1 #number of total release sites
     roh = 0 #EPSC2/EPSC1
     F_1 = 0.35 #initial facilitation
@@ -144,10 +143,10 @@ if __name__ == "__main__":
     axs[1,0].set_ylim(0,1)
     axs[1,0].set_xlim(0,max_time)
 
-    axs[2,0].plot(output.times, -1*output.EPSC_func/max(output.EPSC_func))
+    axs[2,0].plot(output.times, -1*output.EPSC_func/output.EPSC_func[output.stimulus_times[0]])
     axs[2,0].set_xlabel('time (ms)')
     axs[2,0].set_ylabel("Normalized ESPC")
-    axs[2,0].set_ylim(-1,0)
+    #axs[2,0].set_ylim(-1,0)
     axs[2,0].set_xlim(0,max_time)
 
     axs[0,1].plot(output.times, output2.F)
@@ -161,10 +160,10 @@ if __name__ == "__main__":
     axs[1,1].set_ylim(0,1)
     axs[1,1].set_xlim(0,max_time)
 
-    axs[2,1].plot(output.times, -1*output2.EPSC_func/max(output2.EPSC_func))
+    axs[2,1].plot(output.times, -1*output2.EPSC_func/output2.EPSC_func[output2.stimulus_times[0]])
     axs[2,1].set_xlabel('time (ms)')
     axs[2,1].set_ylabel("Normalized ESPC2")
-    axs[2,1].set_ylim(-1,0)
+    #axs[2,1].set_ylim(-1,0)
     axs[2,1].set_xlim(0,max_time)
 
     axs[0,2].plot(output.times, output3.F)
@@ -178,10 +177,10 @@ if __name__ == "__main__":
     axs[1,2].set_ylim(0,1)
     axs[1,2].set_xlim(0,max_time)
 
-    axs[2,2].plot(output.times, -1*output3.EPSC_func/max(output3.EPSC_func))
+    axs[2,2].plot(output.times, -1*output3.EPSC_func/output3.EPSC_func[output3.stimulus_times[0]])
     axs[2,2].set_xlabel('time (ms)')
     axs[2,2].set_ylabel("Normalized ESPC3")
-    axs[2,2].set_ylim(-1,0)
+    #axs[2,2].set_ylim(-1,0)
     axs[2,2].set_xlim(0,max_time)
 
     plt.show()
