@@ -9,12 +9,12 @@ if __name__ == "__main__":
                'RK1': DittmanRK1,
                'RK45': DittmanRK45}
 
-    method = 'RK1'
+    method = 'regular'
     method = METHODS[method]
 
     #arguments passed to simulator
-    n_pulses = 10 #only needed for regular train
-    r = 50 #only needed for regular train
+    n_pulses = 20 #only needed for regular train
+    r = 50 #frequency in Hz, only needed for regular train
     if method == METHODS['regular']:
         stimulus_times = np.linspace(1000/r,(1000/r)*n_pulses,n_pulses, dtype = int) #evenly spaced stimuli at r Hz starting at t = 1000/r ms
     else:
@@ -23,24 +23,25 @@ if __name__ == "__main__":
     max_time = int(1000/r*(n_pulses+3)) #msec, used in plotting
     N_T = 1 #number of total release sites
     roh = 0 #EPSC2/EPSC1
-    F_1 = 0.35 #initial facilitation
-    T_F = 100 #decay constant for CaX_F
-    T_D = 50 #decay constant for CaX_D
+    F_1 = 1-0.198 #initial facilitation
+    T_F = 50 #decay constant for CaX_F
+    T_D = 100 #decay constant for CaX_D
     K_D = 2 #affinity of CaX_D for site
-    k_0 = 2 #initial recovery rate
-    k_max = 30 #maximum recovery rate
+    k_0 = 1 #initial recovery rate
+    k_max = 20 #maximum recovery rate
     #K_F = 1 #affinity of CaX_F for site
-    delta_F = 1 #amount by which CaX_F increases as a result of stimulus
-    delta_D = 1 #amount by which CaX_D increases as a result of stimulus
+    delta_F = 0 #amount by which CaX_F increases as a result of stimulus
+    delta_D = 0.01001 #amount by which CaX_D increases as a result of stimulus
     T_E = 2 #decay constant of simulated EPSCs
 
 
     #HERE ARE SOME EXAMPLE TESTS
 
     #TEST ONE METHOD ON ONE SET OF INPUTS
-    # output = method(stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
-    #
-    # fig = plt.plot(output.times, -1*output.EPSC_func/output.EPSC_func[output.stimulus_times[0]])
+    output = method(stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
+
+    fig = plt.plot(output.times, -1*output.EPSC_func/output.EPSC_func[output.stimulus_times[0]])
+    plt.show()
 
     #TEST ALL 4 METHODS ON THE SAME SET OF INPUTS
     # output1 = regular_train(stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
@@ -124,63 +125,63 @@ if __name__ == "__main__":
     # plt.semilogx(hz_range, EPSC_8_10_trend3, 'bo', markevery = 100)
 
     #PLOT 3 SETS OF INPUTS WITH RK45
-    fig, axs = plt.subplots(3,3)
-
-    output = DittmanRK45(stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, 0.7, 20, 0, 0.3, T_E)
-
-    output2 = DittmanRK45(stimulus_times, max_time, N_T, 3.1, 0.05, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
-
-    output3 = DittmanRK45(stimulus_times, max_time, N_T, 2.2, 0.24, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
-
-    axs[0, 0].plot(output.times, output.F)
-    axs[0, 0].set_title("Climbing fiber")
-    axs[0, 0].set_ylabel("F")
-    axs[0, 0].set_ylim(0,1)
-    axs[0, 0].set_xlim(0,max_time)
-
-    axs[1,0].plot(output.times, output.D)
-    axs[1,0].set_ylabel("D")
-    axs[1,0].set_ylim(0,1)
-    axs[1,0].set_xlim(0,max_time)
-
-    axs[2,0].plot(output.times, -1*output.EPSC_func/output.EPSC_func[output.stimulus_times[0]])
-    axs[2,0].set_xlabel('time (ms)')
-    axs[2,0].set_ylabel("Normalized ESPC")
-    #axs[2,0].set_ylim(-1,0)
-    axs[2,0].set_xlim(0,max_time)
-
-    axs[0,1].plot(output.times, output2.F)
-    axs[0,1].set_title("Parallel fiber")
-    axs[0,1].set_ylabel("F2")
-    axs[0,1].set_ylim(0,1)
-    axs[0,1].set_xlim(0,max_time)
-
-    axs[1,1].plot(output.times, output2.D)
-    axs[1,1].set_ylabel("D2")
-    axs[1,1].set_ylim(0,1)
-    axs[1,1].set_xlim(0,max_time)
-
-    axs[2,1].plot(output.times, -1*output2.EPSC_func/output2.EPSC_func[output2.stimulus_times[0]])
-    axs[2,1].set_xlabel('time (ms)')
-    axs[2,1].set_ylabel("Normalized ESPC2")
-    #axs[2,1].set_ylim(-1,0)
-    axs[2,1].set_xlim(0,max_time)
-
-    axs[0,2].plot(output.times, output3.F)
-    axs[0,2].set_title("Schaffer collateral")
-    axs[0,2].set_ylabel("F3")
-    axs[0,2].set_ylim(0,1)
-    axs[0,2].set_xlim(0,max_time)
-
-    axs[1,2].plot(output.times, output3.D)
-    axs[1,2].set_ylabel("D3")
-    axs[1,2].set_ylim(0,1)
-    axs[1,2].set_xlim(0,max_time)
-
-    axs[2,2].plot(output.times, -1*output3.EPSC_func/output3.EPSC_func[output3.stimulus_times[0]])
-    axs[2,2].set_xlabel('time (ms)')
-    axs[2,2].set_ylabel("Normalized ESPC3")
-    #axs[2,2].set_ylim(-1,0)
-    axs[2,2].set_xlim(0,max_time)
-
-    plt.show()
+    # fig, axs = plt.subplots(3,3)
+    #
+    # output = DittmanRK45(stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, 0.7, 20, 0, 0.3, T_E)
+    #
+    # output2 = DittmanRK45(stimulus_times, max_time, N_T, 3.1, 0.05, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
+    #
+    # output3 = DittmanRK45(stimulus_times, max_time, N_T, 2.2, 0.24, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
+    #
+    # axs[0, 0].plot(output.times, output.F)
+    # axs[0, 0].set_title("Climbing fiber")
+    # axs[0, 0].set_ylabel("F")
+    # axs[0, 0].set_ylim(0,1)
+    # axs[0, 0].set_xlim(0,max_time)
+    #
+    # axs[1,0].plot(output.times, output.D)
+    # axs[1,0].set_ylabel("D")
+    # axs[1,0].set_ylim(0,1)
+    # axs[1,0].set_xlim(0,max_time)
+    #
+    # axs[2,0].plot(output.times, -1*output.EPSC_func/output.EPSC_func[output.stimulus_times[0]])
+    # axs[2,0].set_xlabel('time (ms)')
+    # axs[2,0].set_ylabel("Normalized ESPC")
+    # #axs[2,0].set_ylim(-1,0)
+    # axs[2,0].set_xlim(0,max_time)
+    #
+    # axs[0,1].plot(output.times, output2.F)
+    # axs[0,1].set_title("Parallel fiber")
+    # axs[0,1].set_ylabel("F2")
+    # axs[0,1].set_ylim(0,1)
+    # axs[0,1].set_xlim(0,max_time)
+    #
+    # axs[1,1].plot(output.times, output2.D)
+    # axs[1,1].set_ylabel("D2")
+    # axs[1,1].set_ylim(0,1)
+    # axs[1,1].set_xlim(0,max_time)
+    #
+    # axs[2,1].plot(output.times, -1*output2.EPSC_func/output2.EPSC_func[output2.stimulus_times[0]])
+    # axs[2,1].set_xlabel('time (ms)')
+    # axs[2,1].set_ylabel("Normalized ESPC2")
+    # #axs[2,1].set_ylim(-1,0)
+    # axs[2,1].set_xlim(0,max_time)
+    #
+    # axs[0,2].plot(output.times, output3.F)
+    # axs[0,2].set_title("Schaffer collateral")
+    # axs[0,2].set_ylabel("F3")
+    # axs[0,2].set_ylim(0,1)
+    # axs[0,2].set_xlim(0,max_time)
+    #
+    # axs[1,2].plot(output.times, output3.D)
+    # axs[1,2].set_ylabel("D3")
+    # axs[1,2].set_ylim(0,1)
+    # axs[1,2].set_xlim(0,max_time)
+    #
+    # axs[2,2].plot(output.times, -1*output3.EPSC_func/output3.EPSC_func[output3.stimulus_times[0]])
+    # axs[2,2].set_xlabel('time (ms)')
+    # axs[2,2].set_ylabel("Normalized ESPC3")
+    # #axs[2,2].set_ylim(-1,0)
+    # axs[2,2].set_xlim(0,max_time)
+    #
+    # plt.show()

@@ -37,8 +37,14 @@ class regular_train(object):
         self.EPSC = [] #vector of EPSC values
 
         #steady state values that are used in iteration
-        self.CaX_F_ss = self.delta_F*((e**(1/(self.r*self.T_F)) - 1)**(-1))
-        self.CaX_D_ss = self.delta_D*((1 - e**(-1/(self.r*self.T_D)))**(-1))
+        if 1/(self.r*self.T_F) > 709:
+            self.CaX_F_ss = 0
+        else:
+            self.CaX_F_ss = self.delta_F*((e**(1/(self.r*self.T_F)) - 1)**(-1))
+        if 1/(self.r*self.T_D) > 709:
+            self.CaX_D_Ss = 0
+        else:
+            self.CaX_D_ss = self.delta_D*((1 - e**(-1/(self.r*self.T_D)))**(-1))
 
         #ss values used after iteration
         if self.CaX_F_ss == 0:
