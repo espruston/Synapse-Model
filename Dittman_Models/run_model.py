@@ -1,6 +1,8 @@
 import numpy as np
+import pandas as pd
 from DittmanModels import regular_train, poisson_train, DittmanRK1, DittmanRK45
 from matplotlib import pyplot as plt
+from math import e
 
 if __name__ == "__main__":
 
@@ -27,21 +29,20 @@ if __name__ == "__main__":
     T_F = 50 #decay constant for CaX_F
     T_D = 100 #decay constant for CaX_D
     K_D = 2 #affinity of CaX_D for site
-    k_0 = 1 #initial recovery rate
+    k_0 = .5 #initial recovery rate
     k_max = 20 #maximum recovery rate
     #K_F = 1 #affinity of CaX_F for site
     delta_F = 0 #amount by which CaX_F increases as a result of stimulus
     delta_D = 0.01001 #amount by which CaX_D increases as a result of stimulus
     T_E = 2 #decay constant of simulated EPSCs
 
-
     #HERE ARE SOME EXAMPLE TESTS
 
     #TEST ONE METHOD ON ONE SET OF INPUTS
-    output = method(stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
-
-    fig = plt.plot(output.times, -1*output.EPSC_func/output.EPSC_func[output.stimulus_times[0]])
-    plt.show()
+    # output = method(stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
+    #
+    # fig = plt.plot(output.times, -1*output.EPSC_func/output.EPSC_func[output.stimulus_times[0]])
+    # plt.show()
 
     #TEST ALL 4 METHODS ON THE SAME SET OF INPUTS
     # output1 = regular_train(stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
