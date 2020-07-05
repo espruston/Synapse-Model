@@ -16,7 +16,7 @@ if __name__ == "__main__":
 
     #arguments passed to simulator
     n_pulses = 20 #only needed for regular train
-    r = 50 #frequency in Hz, only needed for regular train
+    r = 1 #frequency in Hz, only needed for regular train
     if method == METHODS['regular']:
         stimulus_times = np.linspace(1000/r,(1000/r)*n_pulses,n_pulses, dtype = int) #evenly spaced stimuli at r Hz starting at t = 1000/r ms
     else:
@@ -25,25 +25,39 @@ if __name__ == "__main__":
     max_time = int(1000/r*(n_pulses+3)) #msec, used in plotting
     N_T = 1 #number of total release sites
     roh = 0 #EPSC2/EPSC1
-    F_1 = 1-0.198 #initial facilitation
+    F_1 = 1-.198 #initial release probability
     T_F = 50 #decay constant for CaX_F
-    T_D = 100 #decay constant for CaX_D
+    T_D = 50 #decay constant for CaX_D
     K_D = 2 #affinity of CaX_D for site
-    k_0 = .5 #initial recovery rate
+    k_0 = 1.216 #initial recovery rate
     k_max = 20 #maximum recovery rate
     #K_F = 1 #affinity of CaX_F for site
     delta_F = 0 #amount by which CaX_F increases as a result of stimulus
-    delta_D = 0.01001 #amount by which CaX_D increases as a result of stimulus
+    delta_D = 0 #amount by which CaX_D increases as a result of stimulus
     T_E = 2 #decay constant of simulated EPSCs
 
     #HERE ARE SOME EXAMPLE TESTS
 
     #TEST ONE METHOD ON ONE SET OF INPUTS
-    # output = method(stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
-    #
-    # fig = plt.plot(output.times, -1*output.EPSC_func/output.EPSC_func[output.stimulus_times[0]])
-    # plt.show()
+    output = method(stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
 
+    fig = plt.plot(output.times, -1*output.EPSC_func/output.EPSC_func[output.stimulus_times[0]])
+    plt.show()
+
+    #TEST ONE METHOD AT TWO FREQUENCIES ACROSS A RANGE OF INPUTS
+    # r = 10
+    # stimulus_times1 = np.linspace(1000/r,(1000/r)*n_pulses,n_pulses, dtype = int) #evenly spaced stimuli at r Hz starting at t = 1000/r ms
+    # max_time = int(1000/r*(n_pulses+3))
+    #
+    # r = 20
+    # stimulus_times2 = np.linspace(1000/r,(1000/r)*n_pulses,n_pulses, dtype = int) #evenly spaced stimuli at r Hz starting at t = 1000/r ms
+    # max_time = int(1000/r*(n_pulses+3))
+    #
+    # search k_o
+    # output1 = method(stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
+    # output2 = method(stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
+    #
+    #
     #TEST ALL 4 METHODS ON THE SAME SET OF INPUTS
     # output1 = regular_train(stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
     #

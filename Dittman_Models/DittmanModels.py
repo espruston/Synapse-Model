@@ -37,7 +37,7 @@ class regular_train(object):
         self.EPSC = [] #vector of EPSC values
 
         #steady state values that are used in iteration
-        if 1/(self.r*self.T_F) > 709:
+        if 1/(self.r*self.T_F) > 709: #prevent overflow
             self.CaX_F_ss = 0
         else:
             self.CaX_F_ss = self.delta_F*((e**(1/(self.r*self.T_F)) - 1)**(-1))

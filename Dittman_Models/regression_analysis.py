@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import os
 from DittmanModels import regular_train, poisson_train, DittmanRK1, DittmanRK45
 from matplotlib import pyplot as plt
 from math import e
@@ -25,7 +26,7 @@ if __name__ == "__main__":
     max_time = int(1000/r*(n_pulses+3)) #msec, used in plotting
     N_T = 1 #number of total release sites
     roh = 0 #EPSC2/EPSC1
-    F_1 = 0.35 #initial release probability
+    F_1 = 1-.198 #initial release probability
     T_F = 100 #decay constant for CaX_F
     T_D = 50 #decay constant for CaX_D
     K_D = 2 #affinity of CaX_D for site
@@ -33,7 +34,7 @@ if __name__ == "__main__":
     k_max = 20 #maximum recovery rate
     #K_F = 1 #affinity of CaX_F for site
     delta_F = 0 #amount by which CaX_F increases as a result of stimulus
-    delta_D = 1 #amount by which CaX_D increases as a result of stimulus
+    delta_D = 0 #amount by which CaX_D increases as a result of stimulus
     T_E = 2 #decay constant of simulated EPSCs
 
     #climbing fiber analysis
@@ -58,12 +59,13 @@ if __name__ == "__main__":
     max_time4 = int(1000/r4*(n_pulses+3))
 
     # best = [method, method, method, method, 0, 1e30]
-    best = [1e30]
-    search_K_D = np.linspace(0,100,11)
-    search_T_D = np.linspace(1,100,100)
-    search_k_max = np.linspace(k_0,99+k_0,100)
+    best = [0]
+    # search_K_D = np.linspace(0,100,11)
+    # search_T_D = np.linspace(1,100,100)
+    # search_k_max = np.linspace(k_0,99+k_0,100)
 
     stdevs = []
+    r_squareds = []
     #ss_weight = .5
 
     EPSCs1 = []
@@ -98,6 +100,118 @@ if __name__ == "__main__":
     ss_range_10hz = [ss_10hz - ss_stdev_10hz, ss_10hz + ss_stdev_10hz]
     ss_range_20hz = [ss_20hz - ss_stdev_20hz, ss_20hz + ss_stdev_20hz]
     ss_range_50hz = [ss_50hz - ss_stdev_50hz, ss_50hz + ss_stdev_50hz]
+
+    # #TEST AT 10 AND 20 hz, FIT k_0
+    # search_k_0 = np.linspace(0.01,20.01,200)
+    # for k_0 in search_k_0:
+    #     output1 = method(stimulus_times2, max_time2, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
+    #     output2 = method(stimulus_times3, max_time3, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
+    #
+    #     r_squared1 = 1 - (sum((output1.EPSC[0:n_consider]/output1.EPSC[0] - data_10hz_np)**2)/sum((data_10hz_np - np.average(data_10hz_np))**2))
+    #
+    #     r_squared2 = 1 - (sum((output2.EPSC[0:n_consider]/output2.EPSC[0] - data_20hz_np)**2)/sum((data_20hz_np - np.average(data_20hz_np))**2))
+    #
+    #     r_squareds.append([r_squared1, r_squared2, (r_squared1 + r_squared2)/2])
+    #
+    #     EPSCs10.append(output1.EPSC[0:n_consider]/output1.EPSC[0])
+    #     EPSCs20.append(output2.EPSC[0:n_consider]/output2.EPSC[0])
+    #
+    #     if (r_squared1 + r_squared2)/2 > best[-1]:
+    #         best = [k_0, EPSCs10[-1], EPSCs20[-1], r_squared1, r_squared2, (r_squared1 + r_squared2)/2]
+    #
+    # pathset = os.path.expanduser(r"~/Dropbox/Work/Jackman Lab/Modeling/200701_1_10hz_20hz_0F0D")
+    # np.savez(pathset, search_k_0, best[0], r_squareds, best[-3:], best[1:2], EPSCs10, EPSCs20)
+    #
+    # print("best average R squared =", best[-1]) #avg r_squared
+    #
+    # fig, axs = plt.subplots(2)
+    #
+    # axs[0].errorbar(stimulus_times1-stimulus_times1[0], data_10hz_np, yerr = stdev_10hz, label = "data")
+    # axs[0].plot(stimulus_times1-stimulus_times1[0], best[1], label = "sim")
+    # axs[0].set_xlim(0,max_time1)
+    # axs[0].set_ylim(0,1.25)
+    # axs[0].set_xlabel("t (ms)")
+    # axs[0].set_ylabel("$EPSC(t)/EPSC_{1}$")
+    # axs[0].set_title("10 Hz Stim, $R^{2}=$" + str(best[-3]) + " for $k_{0}=$" + str(best[0]))
+    # axs[0].legend()
+    #
+    # axs[1].errorbar(stimulus_times2-stimulus_times2[0], data_20hz_np, yerr = stdev_20hz, label = "data")
+    # axs[1].plot(stimulus_times2-stimulus_times2[0], best[2], label = "sim")
+    # axs[1].set_xlim(0,max_time2)
+    # axs[1].set_ylim(0,1.25)
+    # axs[1].set_xlabel("t (ms)")
+    # axs[1].set_ylabel("$EPSC(t)/EPSC_{1}$")
+    # axs[1].set_title("20 Hz Stim, $R^{2}=$" + str(best[-2]) + " for $k_{0}=$" + str(best[0]))
+    # axs[1].legend()
+
+    #TEST AT 1, 10, 20 AND 50 hz, FIT k_0 with 0 facil and Ca dependent recovery
+    # search_k_0 = np.linspace(0.01,20.01,200)
+    # for k_0 in search_k_0:
+    #     output1 = method(stimulus_times1, max_time1, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
+    #     output2 = method(stimulus_times2, max_time2, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
+    #     output3 = method(stimulus_times3, max_time3, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
+    #     output4 = method(stimulus_times4, max_time4, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
+    #
+    #     r_squared1 = 1 - (sum((output1.EPSC[0:n_consider]/output1.EPSC[0] - data_1hz_np)**2)/sum((data_1hz_np - np.average(data_1hz_np))**2))
+    #
+    #     r_squared2 = 1 - (sum((output2.EPSC[0:n_consider]/output2.EPSC[0] - data_10hz_np)**2)/sum((data_10hz_np - np.average(data_10hz_np))**2))
+    #
+    #     r_squared3 = 1 - (sum((output3.EPSC[0:n_consider]/output3.EPSC[0] - data_20hz_np)**2)/sum((data_20hz_np - np.average(data_20hz_np))**2))
+    #
+    #     r_squared4 = 1 - (sum((output4.EPSC[0:n_consider]/output4.EPSC[0] - data_50hz_np)**2)/sum((data_50hz_np - np.average(data_50hz_np))**2))
+    #
+    #     r_squareds.append([r_squared1, r_squared2, r_squared3, r_squared4, (r_squared1 + r_squared2 + r_squared3 + r_squared4)/4])
+    #
+    #     EPSCs1.append(output1.EPSC[0:n_consider]/output1.EPSC[0])
+    #     EPSCs10.append(output2.EPSC[0:n_consider]/output2.EPSC[0])
+    #     EPSCs20.append(output3.EPSC[0:n_consider]/output3.EPSC[0])
+    #     EPSCs50.append(output4.EPSC[0:n_consider]/output4.EPSC[0])
+    #
+    #     if (r_squared1 + r_squared2 + r_squared3 + r_squared4)/4 > best[-1]:
+    #         best = [k_0, EPSCs1[-1], EPSCs10[-1], EPSCs20[-1], EPSCs50[-1], r_squared1, r_squared2, r_squared3, r_squared4, (r_squared1 + r_squared2 + r_squared3 + r_squared4)/4]
+    #
+    # pathset = os.path.expanduser(r"~/Dropbox/Work/Jackman Lab/Modeling/200701_1_1hz_10hz_20hz_50hz_0F0D")
+    # np.savez(pathset, best[0], best[1:4], best[-5:], search_k_0,  r_squareds, EPSCs1, EPSCs10, EPSCs20, EPSCs50)
+    #
+    # print("best average R squared =", best[-1]) #avg r_squared
+    #
+    # fig, axs = plt.subplots(2,2)
+    #
+    # axs[0,0].errorbar(stimulus_times1-stimulus_times1[0], data_1hz_np, yerr = stdev_1hz, label = "data", fmt = '.r')
+    # axs[0,0].plot(stimulus_times1-stimulus_times1[0], best[1], label = "sim")
+    # axs[0,0].set_xlim(0,max_time1)
+    # axs[0,0].set_ylim(0,1.25)
+    # axs[0,0].set_xlabel("t (ms)")
+    # axs[0,0].set_ylabel("$EPSC(t)/EPSC_{1}$")
+    # axs[0,0].set_title("1 Hz Stim, $R^{2}=$" + str(best[-5]) + " for $k_{0}=$" + str(best[0]))
+    # axs[0,0].legend()
+    #
+    # axs[1,0].errorbar(stimulus_times2-stimulus_times2[0], data_10hz_np, yerr = stdev_10hz, label = "data", fmt = '.r')
+    # axs[1,0].plot(stimulus_times2-stimulus_times2[0], best[2], label = "sim")
+    # axs[1,0].set_xlim(0,max_time2)
+    # axs[1,0].set_ylim(0,1.25)
+    # axs[1,0].set_xlabel("t (ms)")
+    # axs[1,0].set_ylabel("$EPSC(t)/EPSC_{1}$")
+    # axs[1,0].set_title("10 Hz Stim, $R^{2}=$" + str(best[-4]) + " for $k_{0}=$" + str(best[0]))
+    # axs[1,0].legend()
+    #
+    # axs[0,1].errorbar(stimulus_times3-stimulus_times3[0], data_20hz_np, yerr = stdev_20hz, label = "data", fmt = '.r')
+    # axs[0,1].plot(stimulus_times3-stimulus_times3[0], best[3], label = "sim")
+    # axs[0,1].set_xlim(0,max_time3)
+    # axs[0,1].set_ylim(0,1.25)
+    # #axs[2].set_xlabel("t (ms)")
+    # axs[0,1].set_ylabel("$EPSC(t)/EPSC_{1}$")
+    # axs[0,1].set_title("20 Hz Stim, $R^{2}=$" + str(best[-3]) + " for $k_{0}=$" + str(best[0]))
+    # axs[0,1].legend()
+    #
+    # axs[1,1].errorbar(stimulus_times4-stimulus_times4[0], data_50hz_np, yerr = stdev_50hz, label = "data", fmt = '.r')
+    # axs[1,1].plot(stimulus_times4-stimulus_times4[0], best[4], label = "sim")
+    # axs[1,1].set_xlim(0,max_time4)
+    # axs[1,1].set_ylim(0,1.25)
+    # axs[1,1].set_xlabel("t (ms)")
+    # axs[1,1].set_ylabel("$EPSC(t)/EPSC_{1}$")
+    # axs[1,1].set_title("50 Hz Stim, $R^{2}=$" + str(best[-2]) + " for $k_{0}=$" + str(best[0]))
+    # axs[1,1].legend()
 
     # #TEST WITHOUT FACIL OR RECOVERY MECHANISM
     # for T_0 in np.linspace(0.1,10.1, 100):
@@ -147,9 +261,9 @@ if __name__ == "__main__":
     #
     #             stdevs.append(stdev)
 
-    print(best[-1])
-    print(best[-2])
-    print(best[-3])
+    # print(best[-1])
+    # print(best[-2])
+    # print(best[-3])
 #    print(best[-4])
 
     # EPSCs1 = np.asarray(EPSCs1).reshape(n_consider, len(search_K_D), len(search_T_D), len(search_k_max))
