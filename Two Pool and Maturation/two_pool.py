@@ -27,15 +27,15 @@ if __name__ == "__main__":
     size_fast = m
     size_slow = 1-size_fast
 
-    p_fast = 0.02
-    p_slow = .26
+    p_fast = 0.56
+    p_slow = 1-.198
 
-    T_fast = .11
-    T_slow = 4.9
+    T_fast = .2
+    T_slow = 7
 
     F = 1
     K_F = 1.5
-    delta_F = .5
+    delta_F = 0
     T_F = 0.07
     BG_F = 1e-5
     sat_F = K_F
