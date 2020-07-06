@@ -1,10 +1,10 @@
 import numpy as np
 import pandas as pd
 import os
+from TwoPoolAndMat import maturation
 from matplotlib.widgets import Slider
 from scipy.integrate import solve_ivp
 from matplotlib import pyplot as plt
-from math import e
 
 if __name__ == "__main__":
 
@@ -37,19 +37,6 @@ if __name__ == "__main__":
     T_maturation = 250
     T_facilitation = 2000
 
-    # transition_mat = [1/T_refill, 0, 0, 0, -1/T_refill, 1/T_maturation+1/T_facilitation, 0, 0, 0, -1/T_maturation, 1/T_facilitation, 0, 0, -1/T_facilitation, -1/T_facilitation, 0] #markov transition matrix for 4 state system with facil. from I and M sites
-
-    # transition_mat = [e**(-1*delta_t/T_refill), 0, 0, 0, 1-e**(-1*delta_t/T_refill), e**(-1*delta_t/T_maturation)*e**(-1*delta_t/T_facilitation), 0, 0, 0, 1-e**(-1*delta_t/T_maturation), e**(-1*delta_t/T_facilitation), 0, 0, 1-e**(-1*delta_t/T_facilitation), 1-e**(-1*delta_t/T_facilitation), 0]
-
-    #transition_mat = np.reshape(transition_mat, (4,4))
-
-    #release list preallocation
-    n_release = []
-
-    state = np.asarray([0, 0, n_sites, 0], dtype = 'float64') #initial state (empty, immature, mature, facil. sites)
-    state = np.reshape(state, (4,1))
-    EPSC = []
-
     best = [-1e30]
     search_T_maturation = np.linspace(1,1000,10)
     search_p_immature = np.linspace(0,0.9,10)
@@ -58,67 +45,14 @@ if __name__ == "__main__":
     n_consider = 20
     r_squareds = []
 
-    for i in range(n_pulses):
-
-        n_release.append([state[1]*p_immature, state[2]*p_mature, state[3]*p_facilitated]) #immature, mature, and facilitated release
-        EPSC.append(sum(n_release[-1]))
-
-        state[0] += sum(n_release[-1]) #add released vesicles to empty sites
-        state[1:] -= n_release[-1] #account for released vesicles in state change
-
-        n_E_I = state[0]*(1-e**(-1*delta_t/T_refill)) #start in E end in I
-        n_E_I_F = state[0]*(1-e**(-1*delta_t/T_refill))*(1-e**(-1*delta_t/T_facilitation)) #start in E end in F after passing through I
-        n_E_I_M = state[0]*(1-e**(-1*delta_t/T_refill))*(1-e**(-1*delta_t/T_maturation))
-        n_E_I_M_F = state[0]*(1-e**(-1*delta_t/T_refill))*(1-e**(-1*delta_t/T_maturation))*(1-e**(-1*delta_t/T_facilitation))
-        n_I_M = state[1]*(1-e**(-1*delta_t/T_maturation))
-        n_I_F = state[1]*(1-e**(-1*delta_t/T_facilitation))
-        n_I_M_F =  state[1]*(1-e**(-1*delta_t/T_maturation))*(1-e**(-1*delta_t/T_facilitation))
-        n_M_F = state[2]*(1-e**(-1*delta_t/T_facilitation))
-
-        state[0] = state[0]*e**(-1*delta_t/T_refill) #after vesicles are released, additional empty sites refill with characteristic time T_refill over delta_t, reducing the number of empty sites
-        state[1] += n_E_I - n_I_M - n_E_I_M - n_I_F - n_E_I_F  #the pool begins to refill with immature vesicles, over delta_t, some facilitate, some mature, and a small number do both, some of the old vesicles mature and some facilitate
-
-        state[2] += n_I_M + n_E_I_M - n_M_F - n_I_M_F - n_E_I_M_F #some of the mature pool is replenished by the immature pool that remains after the pulse and some is replenished by the new vesicles refilling pool first, some mature vesicles are lost to facilitation
-
-        state[3] += n_E_I_F + n_E_I_M_F + n_I_F + n_I_M_F + n_M_F #vesicles become facilitated by 5 paths, 2 starting empty, 2 starting immature, and one starting mature
-
-    print(1 - sum((np.asarray(EPSC[0:n_consider])/EPSC[0] - np.average(EPSC_20hz[0:n_consider]))**2)/sum((EPSC_20hz[0:n_consider] - np.average(EPSC_20hz[0:n_consider]))**2))
+    output = maturation(r, n_pulses, p_immature, p_mature, p_facilitated, T_refill, T_maturation, T_facilitation)
+    print(1 - sum((output.EPSC[0:n_consider] - np.average(EPSC_20hz[0:n_consider]))**2)/sum((EPSC_20hz[0:n_consider] - np.average(EPSC_20hz[0:n_consider]))**2))
 
     # for T_maturation in search_T_maturation:
     #     for p_mature in search_p_mature:
     #         for p_immature in search_p_immature:
     #
-    #             n_release = []
-    #
-    #             state = np.asarray([0, 0, n_sites, 0], dtype = 'float64') #initial state (empty, immature, mature, facil. sites)
-    #             state = np.reshape(state, (4,1))
-    #
-    #             EPSC = []
-    #
-    #             for i in range(n_pulses):
-    #
-    #                 n_release.append([state[1]*p_immature, state[2]*p_mature, state[3]*p_facilitated]) #immature, mature, and facilitated release
-    #                 EPSC.append(sum(n_release[-1]))
-    #
-    #                 state[0] += sum(n_release[-1]) #add released vesicles to empty sites
-    #                 state[1:] -= n_release[-1] #account for released vesicles in state change
-    #
-    #                 n_E_I = state[0]*(1-e**(-1*delta_t/T_refill)) #start in E end in I
-    #                 n_E_I_F = state[0]*(1-e**(-1*delta_t/T_refill))*(1-e**(-1*delta_t/T_facilitation)) #start in E end in F after passing through I
-    #                 n_E_I_M = state[0]*(1-e**(-1*delta_t/T_refill))*(1-e**(-1*delta_t/T_maturation))
-    #                 n_E_I_M_F = state[0]*(1-e**(-1*delta_t/T_refill))*(1-e**(-1*delta_t/T_maturation))*(1-e**(-1*delta_t/T_facilitation))
-    #                 n_I_M = state[1]*(1-e**(-1*delta_t/T_maturation))
-    #                 n_I_F = state[1]*(1-e**(-1*delta_t/T_facilitation))
-    #                 n_I_M_F =  state[1]*(1-e**(-1*delta_t/T_maturation))*(1-e**(-1*delta_t/T_facilitation))
-    #                 n_M_F = state[2]*(1-e**(-1*delta_t/T_facilitation))
-    #
-    #                 state[0] = state[0]*e**(-1*delta_t/T_refill) #after vesicles are released, additional empty sites refill with characteristic time T_refill over delta_t, reducing the number of empty sites
-    #                 state[1] += n_E_I - n_I_M - n_E_I_M - n_I_F - n_E_I_F  #the pool begins to refill with immature vesicles, over delta_t, some facilitate, some mature, and a small number do both, some of the old vesicles mature and some facilitate
-    #
-    #                 state[2] += n_I_M + n_E_I_M - n_M_F - n_I_M_F - n_E_I_M_F #some of the mature pool is replenished by the immature pool that remains after the pulse and some is replenished by the new vesicles refilling pool first, some mature vesicles are lost to facilitation
-    #
-    #                 state[3] += n_E_I_F + n_E_I_M_F + n_I_F + n_I_M_F + n_M_F #vesicles become facilitated by 5 paths, 2 starting empty, 2 starting immature, and one starting mature
-    #
+    #             output = maturation(r, n_pulses, p_immature, p_mature, p_facilitated, T_refill, T_maturation, T_facilitation)
     #                 r_squared = 1 - sum((np.asarray(EPSC[0:n_consider])/EPSC[0] - np.average(EPSC_20hz[0:n_consider]))**2)/sum((EPSC_20hz[0:n_consider] - np.average(EPSC_20hz[0:n_consider]))**2)
     #
     #             if r_squared > best[-1]:
@@ -146,7 +80,7 @@ if __name__ == "__main__":
     fig, ax = plt.subplots()
     plt.subplots_adjust(left=0.25, bottom=0.25)
 
-    l, = plt.plot(range(n_pulses), np.asarray(EPSC)/EPSC[0])
+    l, = plt.plot(range(n_pulses), output.EPSC)
     plt.xlim(0,n_pulses+3)
     plt.ylim(0,1)
     plt.scatter(range(n_pulses), EPSC_20hz)
@@ -174,38 +108,11 @@ if __name__ == "__main__":
         T_maturation = sT_ma.val
         T_facilitation = sT_fa.val
 
-        n_release = []
+        output = maturation(r, n_pulses, p_immature, p_mature, p_facilitated, T_refill, T_maturation, T_facilitation)
 
-        state = np.asarray([0, 0, n_sites, 0], dtype = 'float64') #initial state (empty, immature, mature, facil. sites)
-        state = np.reshape(state, (4,1))
-        EPSC = []
-
-        for i in range(n_pulses):
-            n_release.append([state[1]*p_immature, state[2]*p_mature, state[3]*p_facilitated]) #immature, mature, and facilitated release
-            EPSC.append(sum(n_release[-1]))
-
-            state[0] += sum(n_release[-1]) #add released vesicles to empty sites
-            state[1:] -= n_release[-1] #account for released vesicles in state change
-
-            n_E_I = state[0]*(1-e**(-1*delta_t/T_refill)) #start in E end in I
-            n_E_I_F = state[0]*(1-e**(-1*delta_t/T_refill))*(1-e**(-1*delta_t/T_facilitation)) #start in E end in F after passing through I
-            n_E_I_M = state[0]*(1-e**(-1*delta_t/T_refill))*(1-e**(-1*delta_t/T_maturation))
-            n_E_I_M_F = state[0]*(1-e**(-1*delta_t/T_refill))*(1-e**(-1*delta_t/T_maturation))*(1-e**(-1*delta_t/T_facilitation))
-            n_I_M = state[1]*(1-e**(-1*delta_t/T_maturation))
-            n_I_F = state[1]*(1-e**(-1*delta_t/T_facilitation))
-            n_I_M_F =  state[1]*(1-e**(-1*delta_t/T_maturation))*(1-e**(-1*delta_t/T_facilitation))
-            n_M_F = state[2]*(1-e**(-1*delta_t/T_facilitation))
-
-            state[0] = state[0]*e**(-1*delta_t/T_refill) #after vesicles are released, additional empty sites refill with characteristic time T_refill over delta_t, reducing the number of empty sites
-            state[1] += n_E_I - n_I_M - n_E_I_M - n_I_F - n_E_I_F  #the pool begins to refill with immature vesicles, over delta_t, some facilitate, some mature, and a small number do both, some of the old vesicles mature and some facilitate
-
-            state[2] += n_I_M + n_E_I_M - n_M_F - n_I_M_F - n_E_I_M_F #some of the mature pool is replenished by the immature pool that remains after the pulse and some is replenished by the new vesicles refilling pool first, some mature vesicles are lost to facilitation
-
-            state[3] += n_E_I_F + n_E_I_M_F + n_I_F + n_I_M_F + n_M_F #vesicles become facilitated by 5 paths, 2 starting empty, 2 starting immature, and one starting mature
-
-        print(1 - sum((np.asarray(EPSC[0:n_consider])/EPSC[0] - np.average(EPSC_20hz[0:n_consider]))**2)/sum((EPSC_20hz[0:n_consider] - np.average(EPSC_20hz[0:n_consider]))**2))
-        l.set_ydata(np.asarray(EPSC)/EPSC[0])
-        plt.ylim(0,max(np.asarray(EPSC)/EPSC[0]))
+        print(1 - sum((output.EPSC[0:n_consider] - np.average(EPSC_20hz[0:n_consider]))**2)/sum((EPSC_20hz[0:n_consider] - np.average(EPSC_20hz[0:n_consider]))**2))
+        l.set_ydata(output.EPSC)
+        plt.ylim(0,max(output.EPSC))
         fig.canvas.draw_idle()
 
     spim.on_changed(update)
