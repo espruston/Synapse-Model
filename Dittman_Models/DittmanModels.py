@@ -5,7 +5,7 @@ from math import e
 class regular_train(object):
     """Class for stimuli at regular intervals"""
 
-    def __init__(self, stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E):
+    def __init__(self, stimulus_times, max_time, N_T, rho, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E):
 
         #experiment-dependent
         n_pulses = len(stimulus_times) #number of pulses to be simulated
@@ -16,7 +16,7 @@ class regular_train(object):
         k_max = k_max/1000
 
         #testing parameters
-        K_F = delta_F*((1 - F_1)/((F_1/(1 - F_1))*roh - F_1) - 1) #eq 7, affinity of CaX_f for release site
+        K_F = delta_F*((1 - F_1)/((F_1/(1 - F_1))*rho - F_1) - 1) #eq 7, affinity of CaX_f for release site
 
         #assumed/explicit values,
         CaX_F = [] #vector of CaX_F values, CaX_F[0] = 0
@@ -45,7 +45,10 @@ class regular_train(object):
         if CaX_D_ss == 0:
             xi_ss = 1
         else:
-            xi_ss = ((K_D/CaX_D_ss + 1)/((K_D/CaX_D_ss) + e**(-1/(r*T_D))))**(-1*(k_max-k_0)*T_D) #modified eq 16
+            try:
+                xi_ss = ((K_D/CaX_D_ss + 1)/((K_D/CaX_D_ss) + e**(-1/(r*T_D))))**(-1*(k_max-k_0)*T_D) #modified eq 16
+            except:
+                print(K_D, CaX_D_ss, r, T_D, k_max, k_0)
         D_ss = (1 - e**(-1*k_0/r)*xi_ss)/(1 - (1 - F_ss)*e**(-1*k_0/r)*xi_ss) #eq 20
         EPSC_norm_ss = D_ss*(F_ss/F_1) #eq 21
 
@@ -75,14 +78,14 @@ class regular_train(object):
 
         times = np.linspace(1,max_time,max_time,dtype=np.int32) #vector of length max_time denoting times from 1->max_time msec with step size 1
 
-        alpha_1 = (times*e/T_E)*e**(-1*times/T_E) #reference alpha function
-        alpha = np.zeros(max_time) #functional alpha function
-
-        for i in range(len(stimulus_times)):
-            stimulus = stimulus_times[i]
-            alpha[stimulus-1:max_time-1] = alpha[stimulus-1:max_time-1] + (F[i+1] * D[i+1] * alpha_1[0:max_time-stimulus]) #calculate effect of each stimulus on the alpha function and sum them
-
-        self.EPSC_func = alpha * N_T
+        # alpha_1 = (times*e/T_E)*e**(-1*times/T_E) #reference alpha function
+        # alpha = np.zeros(max_time) #functional alpha function
+        #
+        # for i in range(len(stimulus_times)):
+        #     stimulus = stimulus_times[i]
+        #     alpha[stimulus-1:max_time-1] = alpha[stimulus-1:max_time-1] + (F[i+1] * D[i+1] * alpha_1[0:max_time-stimulus]) #calculate effect of each stimulus on the alpha function and sum them
+        #
+        # self.EPSC_func = alpha * N_T
         self.times = times
 
         self.stimulus_times = stimulus_times
@@ -92,7 +95,7 @@ class regular_train(object):
         self.N_T = N_T #number of total release sites
 
         #table 2 values
-        self.roh = roh
+        self.rho = rho
         self.F_1 = F_1
         self.T_F = T_F
         self.T_D = T_D
@@ -119,7 +122,7 @@ class regular_train(object):
 class poisson_train(object):
     """Class for stimuli according to a poisson train"""
 
-    def __init__(self, stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E):
+    def __init__(self, stimulus_times, max_time, N_T, rho, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E):
 
         #experiment-dependent
         delta_ts = np.concatenate(([stimulus_times[0]], np.diff(stimulus_times)))
@@ -128,7 +131,7 @@ class poisson_train(object):
         k_max = k_max/1000
 
         #testing parameters
-        K_F = delta_F*((1 - F_1)/((F_1/(1 - F_1))*roh - F_1) - 1) #affinity of CaX_f for release site
+        K_F = delta_F*((1 - F_1)/((F_1/(1 - F_1))*rho - F_1) - 1) #affinity of CaX_f for release site
         if K_F == 0:
             K_F = 1e30
 
@@ -179,7 +182,7 @@ class poisson_train(object):
         self.max_time = max_time
 
         #table 2 values
-        self.roh = roh
+        self.rho = rho
         self.F_1 = F_1
         self.T_F = T_F
         self.T_D = T_D
@@ -204,13 +207,13 @@ class poisson_train(object):
 
 class DittmanRK1(object):
 
-    def __init__(self, stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E):
+    def __init__(self, stimulus_times, max_time, N_T, rho, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E):
 
         k_0 = k_0/1000
         k_max = k_max/1000
 
         #testing parameters
-        K_F = delta_F*((1 - F_1)/((F_1/(1 - F_1))*roh - F_1) - 1) #affinity of CaX_f for release site
+        K_F = delta_F*((1 - F_1)/((F_1/(1 - F_1))*rho - F_1) - 1) #affinity of CaX_f for release site
 
         #set or calculated values
         times = np.linspace(1,max_time,max_time,dtype=np.int32) #vector of length max_time denoting times from 1->max_time msec with step size 1
@@ -262,13 +265,13 @@ class DittmanRK1(object):
             alpha[stimulus-1:max_time-1] = alpha[stimulus-1:max_time-1] + (F[stimulus-1] * D[stimulus-1] * alpha_1[0:max_time-stimulus]) #calculate effect of each stimulus on the alpha function and sum them
 
         self.EPSC_func =  alpha * N_T
-
+        self.EPSC = EPSC/EPSC[0]
         self.stimulus_times = stimulus_times #vector containing times at which stimuli occur (in msec) !!make sure these values exist in times vector!!
         self.max_time = max_time
         self.N_T = N_T #number of total release sites
 
         #table 2 values
-        self.roh = roh
+        self.rho = rho
         self.F_1 = F_1
         self.T_F = T_F
         self.T_D = T_D
@@ -293,12 +296,12 @@ class DittmanRK1(object):
 
 class DittmanRK45(object):
 
-    def __init__(self, stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E):
+    def __init__(self, stimulus_times, max_time, N_T, rho, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E):
 
         k_0 = k_0/1000
         k_max = k_max/1000
 
-        K_F = delta_F*((1 - F_1)/((F_1/(1 - F_1))*roh - F_1) - 1) #affinity of CaX_f for release site
+        K_F = delta_F*((1 - F_1)/((F_1/(1 - F_1))*rho - F_1) - 1) #affinity of CaX_f for release site
         if K_F == 0:
             K_F = 1e10
 
@@ -353,7 +356,7 @@ class DittmanRK45(object):
         self.N_T = N_T #number of total release sites
 
         #table 2 values
-        self.roh = roh
+        self.rho = rho
         self.F_1 = F_1
         self.T_F = T_F
         self.T_D = T_D

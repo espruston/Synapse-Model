@@ -16,7 +16,7 @@ if __name__ == "__main__":
 
     #arguments passed to simulator
     n_pulses = 20 #only needed for regular train
-    r = 1 #frequency in Hz, only needed for regular train
+    r = 20 #frequency in Hz, only needed for regular train
     if method == METHODS['regular']:
         stimulus_times = np.linspace(1000/r,(1000/r)*n_pulses,n_pulses, dtype = int) #evenly spaced stimuli at r Hz starting at t = 1000/r ms
     else:
@@ -36,15 +36,13 @@ if __name__ == "__main__":
     delta_D = 0 #amount by which CaX_D increases as a result of stimulus
     T_E = 2 #decay constant of simulated EPSCs
 
-    #HERE ARE SOME EXAMPLE TESTS
-
-    #TEST ONE METHOD ON ONE SET OF INPUTS
+    """TEST ONE METHOD ON ONE SET OF INPUTS"""
     output = method(stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
 
-    fig = plt.plot(output.times, -1*output.EPSC_func/output.EPSC_func[output.stimulus_times[0]])
+    fig = plt.plot(range(n_pulses), output.EPSC)
     plt.show()
 
-    #TEST ONE METHOD AT TWO FREQUENCIES ACROSS A RANGE OF INPUTS
+    """TEST ONE METHOD AT TWO FREQUENCIES ACROSS A RANGE OF INPUTS"""
     # r = 10
     # stimulus_times1 = np.linspace(1000/r,(1000/r)*n_pulses,n_pulses, dtype = int) #evenly spaced stimuli at r Hz starting at t = 1000/r ms
     # max_time = int(1000/r*(n_pulses+3))
@@ -58,7 +56,7 @@ if __name__ == "__main__":
     # output2 = method(stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
     #
     #
-    #TEST ALL 4 METHODS ON THE SAME SET OF INPUTS
+    """TEST ALL 4 METHODS ON THE SAME SET OF INPUTS"""
     # output1 = regular_train(stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
     #
     # output2 = poisson_train(stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
@@ -74,7 +72,7 @@ if __name__ == "__main__":
     # axs[2].plot(output3.times, -1*output3.EPSC_func/output3.EPSC_func[output3.stimulus_times[0]])
     # axs[3].plot(output3.times, -1*output4.EPSC_func/output4.EPSC_func[output4.stimulus_times[0]])
     #
-    #TEST ONE METHOD ON 1 INPUT ACROSS A RANGE OF FREQUENCIES
+    """TEST ONE METHOD ON 1 INPUT ACROSS A RANGE OF FREQUENCIES"""
     # EPSC_8_10_trend = []
     #
     # fig, axs = plt.subplots(4)
@@ -102,7 +100,7 @@ if __name__ == "__main__":
     # axs[0].semilogx(hz_range, np.asarray(EPSC_8_10_trend)/.35)
     # axs[0].set_xlim(0.1,max(hz_range))
 
-    # TEST ONE METHOD ON 3 INPUTS ACROSS A RANGE OF FREQUENCIES
+    """TEST ONE METHOD ON 3 INPUTS ACROSS A RANGE OF FREQUENCIES"""
     # analyticSol = []
     # analyticSol2 = []
     # analyticSol3 = []
@@ -139,7 +137,7 @@ if __name__ == "__main__":
     # plt.semilogx(hz_range, EPSC_8_10_trend2, 'go', markevery = 100)
     # plt.semilogx(hz_range, EPSC_8_10_trend3, 'bo', markevery = 100)
 
-    #PLOT 3 SETS OF INPUTS WITH RK45
+    """PLOT 3 SETS OF INPUTS WITH RK45"""
     # fig, axs = plt.subplots(3,3)
     #
     # output = DittmanRK45(stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, 0.7, 20, 0, 0.3, T_E)

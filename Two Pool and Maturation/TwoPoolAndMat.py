@@ -94,7 +94,7 @@ class maturation(object):
 
             state[3] += n_E_I_F + n_E_I_M_F + n_I_F + n_I_M_F + n_M_F #vesicles become facilitated by 5 paths, 2 starting empty, 2 starting immature, and one starting mature
 
-        self.EPSC = np.asarray(EPSC)/EPSC[0] 
+        self.EPSC = np.asarray(EPSC)/EPSC[0]
 
         self.p_immature = p_immature
         self.p_mature = p_mature

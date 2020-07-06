@@ -3,6 +3,7 @@ import pandas as pd
 from TwoPoolAndMat import two_pool
 from matplotlib.widgets import Slider
 from matplotlib import pyplot as plt
+from sklearn import metrics
 
 if __name__ == "__main__":
 
@@ -44,6 +45,7 @@ if __name__ == "__main__":
     n_consider = 20
 
     output = two_pool(r, n_pulses, size_fast, size_slow, p_fast, p_slow, T_fast, T_slow, delta_F, T_F)
+    print(metrics.r2_score(EPSC_20hz[0:n_consider], output.EPSC[0:n_consider]))
 
     fig, ax = plt.subplots()
     plt.subplots_adjust(left=0.25, bottom=0.25)
@@ -81,7 +83,7 @@ if __name__ == "__main__":
 
         output = two_pool(r, n_pulses, size_fast, size_slow, p_fast, p_slow, T_fast, T_slow, delta_F, T_F)
 
-        print(1 - sum((output.EPSC[0:n_consider] - np.average(EPSC_20hz[0:n_consider]))**2)/sum((EPSC_20hz[0:n_consider] - np.average(EPSC_20hz[0:n_consider]))**2))
+        print(metrics.r2_score(EPSC_20hz[0:n_consider], output.EPSC[0:n_consider]))
         l.set_ydata(output.EPSC)
         m.set_ydata(output.fastEPSC)
         n.set_ydata(output.slowEPSC)

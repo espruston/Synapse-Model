@@ -3,8 +3,8 @@ import pandas as pd
 import os
 from TwoPoolAndMat import maturation
 from matplotlib.widgets import Slider
-from scipy.integrate import solve_ivp
 from matplotlib import pyplot as plt
+from sklearn import metrics
 
 if __name__ == "__main__":
 
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     r_squareds = []
 
     output = maturation(r, n_pulses, p_immature, p_mature, p_facilitated, T_refill, T_maturation, T_facilitation)
-    print(1 - sum((output.EPSC[0:n_consider] - np.average(EPSC_20hz[0:n_consider]))**2)/sum((EPSC_20hz[0:n_consider] - np.average(EPSC_20hz[0:n_consider]))**2))
+    print(metrics.r2_score(EPSC_20hz[0:n_consider], output.EPSC[0:n_consider]))
 
     # for T_maturation in search_T_maturation:
     #     for p_mature in search_p_mature:
@@ -110,7 +110,7 @@ if __name__ == "__main__":
 
         output = maturation(r, n_pulses, p_immature, p_mature, p_facilitated, T_refill, T_maturation, T_facilitation)
 
-        print(1 - sum((output.EPSC[0:n_consider] - np.average(EPSC_20hz[0:n_consider]))**2)/sum((EPSC_20hz[0:n_consider] - np.average(EPSC_20hz[0:n_consider]))**2))
+        print(metrics.r2_score(EPSC_20hz[0:n_consider], output.EPSC[0:n_consider]))
         l.set_ydata(output.EPSC)
         plt.ylim(0,max(output.EPSC))
         fig.canvas.draw_idle()
