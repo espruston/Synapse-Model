@@ -69,10 +69,16 @@ class maturation(object):
         state = np.asarray([0, 0, n_sites, 0], dtype = 'float64') #initial state (empty, immature, mature, facil. sites)
         state = np.reshape(state, (4,1))
         EPSC = []
+        EPSC_immature = []
+        EPSC_mature = []
+        EPSC_facilitated = []
 
         for i in range(n_pulses):
 
             n_release.append([state[1]*p_immature, state[2]*p_mature, state[3]*p_facilitated]) #immature, mature, and facilitated release
+            EPSC_immature.append(state[1]*p_immature)
+            EPSC_mature.append(state[2]*p_mature)
+            EPSC_facilitated.append(state[3]*p_facilitated)
             EPSC.append(sum(n_release[-1]))
 
             state[0] += sum(n_release[-1]) #add released vesicles to empty sites
@@ -95,6 +101,9 @@ class maturation(object):
             state[3] += n_E_I_F + n_E_I_M_F + n_I_F + n_I_M_F + n_M_F #vesicles become facilitated by 5 paths, 2 starting empty, 2 starting immature, and one starting mature
 
         self.EPSC = np.asarray(EPSC)/EPSC[0]
+        self.EPSC_immature = np.asarray(EPSC_immature)/EPSC[0]
+        self.EPSC_mature = np.asarray(EPSC_mature)/EPSC[0]
+        self.EPSC_facilitated = np.asarray(EPSC_facilitated)/EPSC[0]
 
         self.p_immature = p_immature
         self.p_mature = p_mature
