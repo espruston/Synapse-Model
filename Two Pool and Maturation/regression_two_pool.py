@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import os
-from TwoPoolAndMat import maturation
+from TwoPoolAndMat import two_pool
 from matplotlib.widgets import Slider
 from matplotlib import pyplot as plt
 from sklearn import metrics
@@ -22,45 +22,55 @@ if __name__ == "__main__":
     EPSC_50hz = data_50hz.to_numpy()[:,0]
     stdev_50hz = data_50hz.to_numpy()[:,1]
 
-    n_sites = 1
+    m = .68
+    size_fast = m
+    size_slow = 1-size_fast
+
+    p_fast = 0.02
+    p_slow = 1-.198
+
+    T_fast = .11
+    T_slow = 4.9
+
+    F = 1
+    K_F = 1.5
+    delta_F = 1
+    T_F = 0.0001
+    BG_F = 1e-5
+    sat_F = K_F
+    facil = BG_F
+
     n_pulses = 20
-    r = 20
-    delta_t = 1000/r
-
-    #release probabilities
-    p_immature = .2
-    p_mature = 1-.198
-    p_facilitated = 1
-
-    #time constants
-    T_refill = 12
-    T_maturation = 250
-    T_facilitation = 1e30
 
     best = [-1e30]
-    search_T_maturation = np.linspace(1000,3000,100)
-    search_T_refill = np.linspace(100,300,100)
-    search_p_immature = np.linspace(0,p_mature,10)
+    search_p_fast = np.linspace(.01,1,10)
+    search_T_fast = np.linspace(.1,1,10)
+    search_T_slow = np.linspace(1,10,10)
+    search_size_fast = np.linspace(0,1,10)
 
     n_consider = 20
 
-    for T_refill in search_T_refill:
-        for T_maturation in search_T_maturation:
-            for p_immature in search_p_immature:
-                EPSC_1 = maturation(1, n_pulses, p_immature, p_mature, p_facilitated, T_refill, T_maturation, T_facilitation).EPSC
-                EPSC_10 = maturation(10, n_pulses, p_immature, p_mature, p_facilitated, T_refill, T_maturation, T_facilitation).EPSC
-                EPSC_20 = maturation(20, n_pulses, p_immature, p_mature, p_facilitated, T_refill, T_maturation, T_facilitation).EPSC
-                EPSC_50 = maturation(50, n_pulses, p_immature, p_mature, p_facilitated, T_refill, T_maturation, T_facilitation).EPSC
+    for p_fast in search_p_fast:
+        for T_fast in search_T_fast:
+            for T_slow in search_T_slow:
+                for size_fast in search_size_fast:
 
-                r_squared_1hz = metrics.r2_score(EPSC_1hz[0:n_consider], EPSC_1[0:n_consider])
-                r_squared_10hz = metrics.r2_score(EPSC_10hz[0:n_consider], EPSC_10[0:n_consider])
-                r_squared_20hz = metrics.r2_score(EPSC_20hz[0:n_consider], EPSC_20[0:n_consider])
-                r_squared_50hz = metrics.r2_score(EPSC_50hz[0:n_consider], EPSC_50[0:n_consider])
+                    size_slow = 1 - size_fast
 
-                avg_r_squared = (r_squared_1hz + r_squared_10hz + r_squared_20hz + r_squared_50hz)/4
+                    EPSC_1 = two_pool(1, n_pulses, size_fast, size_slow, p_fast, p_slow, T_fast, T_slow, delta_F, T_F).EPSC
+                    EPSC_10 = two_pool(10, n_pulses, size_fast, size_slow, p_fast, p_slow, T_fast, T_slow, delta_F, T_F).EPSC
+                    EPSC_20 = two_pool(20, n_pulses, size_fast, size_slow, p_fast, p_slow, T_fast, T_slow, delta_F, T_F).EPSC
+                    EPSC_50 = two_pool(50, n_pulses, size_fast, size_slow, p_fast, p_slow, T_fast, T_slow, delta_F, T_F).EPSC
 
-                if avg_r_squared > best[-1]:
-                    best = [EPSC_1, EPSC_10, EPSC_20, EPSC_50, [T_refill, T_maturation, p_immature], [r_squared_1hz, r_squared_10hz, r_squared_20hz, r_squared_50hz], avg_r_squared]
+                    r_squared_1hz = metrics.r2_score(EPSC_1hz[0:n_consider], EPSC_1[0:n_consider])
+                    r_squared_10hz = metrics.r2_score(EPSC_10hz[0:n_consider], EPSC_10[0:n_consider])
+                    r_squared_20hz = metrics.r2_score(EPSC_20hz[0:n_consider], EPSC_20[0:n_consider])
+                    r_squared_50hz = metrics.r2_score(EPSC_50hz[0:n_consider], EPSC_50[0:n_consider])
+
+                    avg_r_squared = (r_squared_1hz + r_squared_10hz + r_squared_20hz + r_squared_50hz)/4
+
+                    if avg_r_squared > best[-1]:
+                        best = [EPSC_1, EPSC_10, EPSC_20, EPSC_50, [p_fast, T_fast, T_slow, size_fast], [r_squared_1hz, r_squared_10hz, r_squared_20hz, r_squared_50hz], avg_r_squared]
 
     fig, axs = plt.subplots(4)
 
