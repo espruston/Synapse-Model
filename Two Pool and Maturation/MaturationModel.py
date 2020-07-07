@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import os
 from TwoPoolAndMat import maturation
-from matplotlib.widgets import Slider
+from matplotlib.widgets import Slider, RadioButtons
 from matplotlib import pyplot as plt
 from sklearn import metrics
 
@@ -22,26 +22,29 @@ if __name__ == "__main__":
     EPSC_50hz = data_50hz.to_numpy()[:,0]
     stdev_50hz = data_50hz.to_numpy()[:,1]
 
+    rs = {'1hz': 1, '10hz': 10,  '20hz': 20, '50hz': 50}
+
+    EPSClabels = {'1hz': EPSC_1hz, '10hz': EPSC_10hz, '20hz': EPSC_20hz, '50hz': EPSC_50hz}
+
     n_sites = 1
     n_pulses = 20
     r = 1
     delta_t = 1000/r
 
     #release probabilities
-    p_immature = .2
+    p_immature = .624
     p_mature = 1-.198
     p_facilitated = 1
 
     #time constants
-    T_refill = 12
-    T_maturation = 250
+    T_refill = 160
+    T_maturation = 2200
     T_facilitation = 1e30
 
     n_consider = 20
     r_squareds = []
 
     output = maturation(r, n_pulses, p_immature, p_mature, p_facilitated, T_refill, T_maturation, T_facilitation)
-    print(metrics.r2_score(EPSC_1hz[0:n_consider], output.EPSC[0:n_consider]))
 
     fig, ax = plt.subplots()
     plt.subplots_adjust(left=0.25, bottom=0.25)
@@ -50,9 +53,10 @@ if __name__ == "__main__":
     m, = plt.plot(range(n_pulses), output.EPSC_immature, label = "Immature")
     n, = plt.plot(range(n_pulses), output.EPSC_mature, label = "Mature")
     o, = plt.plot(range(n_pulses), output.EPSC_facilitated, label = "Facilitated")
+    q, = plt.plot(range(n_pulses), EPSC_1hz, 'b.')
     plt.xlim(0,n_pulses)
     plt.ylim(0,1)
-    plt.scatter(range(n_pulses), EPSC_1hz)
+
 
     axcolor = 'lightgoldenrodyellow'
     axpim = plt.axes([0.25, 0.025, 0.65, 0.01], facecolor=axcolor)
@@ -65,9 +69,13 @@ if __name__ == "__main__":
     spim = Slider(axpim, 'p_immature', 0, 1, valinit=p_immature, valstep=.01)
     spma = Slider(axpma, 'p_mature', .1, 1, valinit=p_mature, valstep=.01)
     spfa = Slider(axpfa, 'p_facilitated', .1, 1, valinit=p_facilitated, valstep=.01)
-    sT_re = Slider(axT_re, 'T_refill', 1, 2000, valinit=T_refill, valstep=20)
-    sT_ma = Slider(axT_ma, 'T_maturation', 1, 2000, valinit=T_maturation, valstep=20)
+    sT_re = Slider(axT_re, 'T_refill', 1, 500, valinit=T_refill, valstep=20)
+    sT_ma = Slider(axT_ma, 'T_maturation', 1000, 4000, valinit=T_maturation, valstep=20)
     sT_fa = Slider(axT_fa, 'T_facilitation', 1, 1e30, valinit=T_facilitation, valstep=20)
+
+    rax = plt.axes([0.025, 0.5, 0.15, 0.20], facecolor=axcolor)
+    radio = RadioButtons(rax, ('1hz', '10hz', '20hz', '50hz'), active=0)
+    plt.title("Now showing data for:")
 
     def update(val):
         p_immature = spim.val
@@ -76,6 +84,8 @@ if __name__ == "__main__":
         T_refill = sT_re.val
         T_maturation = sT_ma.val
         T_facilitation = sT_fa.val
+
+        r = rs[radio.value_selected]
 
         EPSC_1 = maturation(1, n_pulses, p_immature, p_mature, p_facilitated, T_refill, T_maturation, T_facilitation).EPSC
         EPSC_10 = maturation(10, n_pulses, p_immature, p_mature, p_facilitated, T_refill, T_maturation, T_facilitation).EPSC
@@ -88,7 +98,6 @@ if __name__ == "__main__":
         r_squared_50hz = metrics.r2_score(EPSC_50hz, EPSC_50)
 
         avg_r_squared = (r_squared_1hz + r_squared_10hz + r_squared_20hz + r_squared_50hz)/4
-
         output = maturation(r, n_pulses, p_immature, p_mature, p_facilitated, T_refill, T_maturation, T_facilitation)
 
         print(avg_r_squared)
@@ -96,7 +105,7 @@ if __name__ == "__main__":
         m.set_ydata(output.EPSC_immature)
         n.set_ydata(output.EPSC_mature)
         o.set_ydata(output.EPSC_facilitated)
-        plt.ylim(0,max(EPSC_1))
+        q.set_ydata(EPSClabels[radio.value_selected])
         fig.canvas.draw_idle()
 
     spim.on_changed(update)
@@ -105,5 +114,6 @@ if __name__ == "__main__":
     sT_re.on_changed(update)
     sT_ma.on_changed(update)
     sT_fa.on_changed(update)
+    radio.on_clicked(update)
 
     plt.show()

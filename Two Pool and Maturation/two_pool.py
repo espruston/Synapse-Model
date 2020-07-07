@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from TwoPoolAndMat import two_pool
-from matplotlib.widgets import Slider
+from matplotlib.widgets import Slider, RadioButtons
 from matplotlib import pyplot as plt
 from sklearn import metrics
 
@@ -21,9 +21,13 @@ if __name__ == "__main__":
     EPSC_50hz = data_50hz.to_numpy()[:,0]
     stdev_50hz = data_50hz.to_numpy()[:,1]
 
-    r = 10
+    rs = {'1hz': 1, '10hz': 10,  '20hz': 20, '50hz': 50}
 
-    m = .68
+    EPSClabels = {'1hz': EPSC_1hz, '10hz': EPSC_10hz, '20hz': EPSC_20hz, '50hz': EPSC_50hz}
+
+    r = 1
+
+    m = .89
     size_fast = m
     size_slow = 1-size_fast
 
@@ -45,7 +49,6 @@ if __name__ == "__main__":
     n_consider = 20
 
     output = two_pool(r, n_pulses, size_fast, size_slow, p_fast, p_slow, T_fast, T_slow, delta_F, T_F)
-    print(metrics.r2_score(EPSC_20hz[0:n_consider], output.EPSC[0:n_consider]))
 
     fig, ax = plt.subplots()
     plt.subplots_adjust(left=0.25, bottom=0.25)
@@ -53,9 +56,9 @@ if __name__ == "__main__":
     l, = plt.plot(range(n_pulses), output.EPSC, label = "EPSC")
     m, = plt.plot(range(n_pulses), output.fastEPSC, label = "Fast pool")
     n, = plt.plot(range(n_pulses), output.slowEPSC, label = "Slow pool")
+    q, = plt.plot(range(n_pulses), EPSC_1hz, 'b.')
     plt.xlim(0,n_pulses)
     plt.ylim(0,1)
-    plt.scatter(range(n_pulses), EPSC_20hz, label = "data")
 
     axcolor = 'lightgoldenrodyellow'
     axpf = plt.axes([0.25, 0.025, 0.65, 0.01], facecolor=axcolor)
@@ -72,6 +75,10 @@ if __name__ == "__main__":
     sini_f = Slider(axini_f, 'size_fast', 0, 1, valinit=size_fast, valstep=.01)
     sT_fa = Slider(axT_fa, 'T_facilitation', 0.01, 10, valinit=T_F, valstep=0.01)
 
+    rax = plt.axes([0.025, 0.5, 0.15, 0.20], facecolor=axcolor)
+    radio = RadioButtons(rax, ('1hz', '10hz', '20hz', '50hz'), active=0)
+    plt.title("Now showing data for:")
+
     def update(val):
         p_fast = spf.val
         p_slow = sps.val
@@ -81,13 +88,27 @@ if __name__ == "__main__":
         size_slow = 1-size_fast
         T_F = sT_fa.val
 
+        r = rs[radio.value_selected]
+
         output = two_pool(r, n_pulses, size_fast, size_slow, p_fast, p_slow, T_fast, T_slow, delta_F, T_F)
 
-        print(metrics.r2_score(EPSC_20hz[0:n_consider], output.EPSC[0:n_consider]))
+        EPSC_1 = two_pool(1, n_pulses, size_fast, size_slow, p_fast, p_slow, T_fast, T_slow, delta_F, T_F).EPSC
+        EPSC_10 = two_pool(10, n_pulses, size_fast, size_slow, p_fast, p_slow, T_fast, T_slow, delta_F, T_F).EPSC
+        EPSC_20 = two_pool(20, n_pulses, size_fast, size_slow, p_fast, p_slow, T_fast, T_slow, delta_F, T_F).EPSC
+        EPSC_50 = two_pool(50, n_pulses, size_fast, size_slow, p_fast, p_slow, T_fast, T_slow, delta_F, T_F).EPSC
+
+        r_squared_1hz = metrics.r2_score(EPSC_1hz, EPSC_1)
+        r_squared_10hz = metrics.r2_score(EPSC_10hz, EPSC_10)
+        r_squared_20hz = metrics.r2_score(EPSC_20hz, EPSC_20)
+        r_squared_50hz = metrics.r2_score(EPSC_50hz, EPSC_50)
+
+        avg_r_squared = (r_squared_1hz + r_squared_10hz + r_squared_20hz + r_squared_50hz)/4
+
+        print(avg_r_squared)
         l.set_ydata(output.EPSC)
         m.set_ydata(output.fastEPSC)
         n.set_ydata(output.slowEPSC)
-        plt.ylim(0,max(output.EPSC))
+        q.set_ydata(EPSClabels[radio.value_selected])
         fig.canvas.draw_idle()
 
     spf.on_changed(update)
@@ -96,6 +117,8 @@ if __name__ == "__main__":
     sT_s.on_changed(update)
     sini_f.on_changed(update)
     sT_fa.on_changed(update)
+    radio.on_clicked(update)
+
     plt.xlim(0,n_pulses)
-    plt.legend()
+
     plt.show()
