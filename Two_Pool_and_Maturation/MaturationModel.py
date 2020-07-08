@@ -42,7 +42,6 @@ if __name__ == "__main__":
     T_facilitation = 1e30
 
     n_consider = 20
-    r_squareds = []
 
     output = maturation(r, n_pulses, p_immature, p_mature, p_facilitated, T_refill, T_maturation, T_facilitation)
 
