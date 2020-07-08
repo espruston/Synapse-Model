@@ -41,9 +41,11 @@ class two_pool(object):
             facil = facil*e**(-1/(T_F*r))
             F = 1 + sat_F*facil/(K_F + facil)
 
+        self.norm_val = EPSC[0]
         self.EPSC = np.asarray(EPSC)/EPSC[0]
         self.fastEPSC = np.asarray(fastEPSC)/EPSC[0]
         self.slowEPSC = np.asarray(slowEPSC)/EPSC[0]
+        self.final_state = [fastpool, slowpool]
 
         self.r = r
         self.n_pulses = n_pulses
