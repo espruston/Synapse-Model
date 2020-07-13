@@ -53,6 +53,7 @@ class regular_train(object):
         EPSC_norm_ss = D_ss*(F_ss/F_1) #eq 21
 
         for i in range(n_pulses): #i ranges from 0->npulses-1
+            EPSC.append(N_T*D[-1]*F[-1]) #eq 19, first pulse at stimulus_times[0]
 
             CaX_F.append(CaX_F_ss*(1-e**(-1*(i)/(r*T_F)))) #eq 8 amount of CaX_F just before current stimulus
 
@@ -70,9 +71,6 @@ class regular_train(object):
                 xi.append(((K_D/CaX_D[-1] + 1)/((K_D/CaX_D[-1]) + e**(-1/(r*T_D))))**(-1*(k_max-k_0)*T_D)) #equation 16
 
             D.append(1 - (1 - (1 - F[-2])*(D[-1]))*e**(-1*k_0/r)*xi[-1]) #equation 15
-
-            EPSC.append(N_T*D[-1]*F[-1]) #eq 19, first pulse at stimulus_times[0]
-
 
         CaX_D.append(CaX_D_ss*(1 - e**(-1*(n_pulses-1)/(r*T_D)))) #calculate value after last pulse for the last pulse
 
@@ -144,6 +142,7 @@ class poisson_train(object):
         EPSC = [] #vector of EPSC values normalized to the first pulse
 
         for i in range(len(stimulus_times)):
+            EPSC.append(N_T*D[-1]*F[-1])
 
             CaX_F.append(CaX_F[-1]*e**(-1*delta_ts[i]/T_F) + delta_F)
 
@@ -160,8 +159,6 @@ class poisson_train(object):
                 xi.append(((K_D/CaX_D[-2] + 1)/((K_D/CaX_D[-2]) + e**(-1/((1/delta_ts[i])*T_D))))**(-1*(k_max - k_0)*T_D)) #equation 16, 1/delta_t is the frequency in msec for defining the interval between pulse i and i-1
 
             D.append(1 - (1 - (1 - F[-2])*(D[-1]))*e**(-1*k_0/(1/delta_ts[i]))*xi[-1])
-
-            EPSC.append(N_T*D[-1]*F[-1])
 
 
         CaX_D.append(CaX_D[-1]*e**(-1*delta_ts[-1]/T_D) + delta_D)
@@ -256,7 +253,7 @@ class DittmanRK1(object):
             #dD_dt = (1 - D[t-1])*k_recov/1000 - D[t-1]*F[t-1]*stimuli[t-1]
             D[t] = D[t-1] + dD_dt
 
-        EPSC = F[(stimulus_times)-1]*D[(stimulus_times)-1]
+        EPSC = F[stimulus_times-1]*D[stimulus_times-1]
 
         alpha_1 = (times*e/T_E)*e**(-1*times/T_E) #reference alpha function
         alpha = np.zeros(max_time) #functional alpha function

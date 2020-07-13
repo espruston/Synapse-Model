@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from DittmanModels import regular_train, poisson_train, DittmanRK1, DittmanRK45
 from matplotlib import pyplot as plt
+from sklearn import metrics
 from math import e
 
 if __name__ == "__main__":
@@ -27,19 +28,55 @@ if __name__ == "__main__":
     roh = 0 #EPSC2/EPSC1
     F_1 = 1-.198 #initial release probability
     T_F = 50 #decay constant for CaX_F
-    T_D = 50 #decay constant for CaX_D
+    T_D = 96.2 #decay constant for CaX_D
     K_D = 2 #affinity of CaX_D for site
-    k_0 = 1.216 #initial recovery rate
-    k_max = 20 #maximum recovery rate
+    k_0 = 0.302 #initial recovery rate
+    k_max = 1.09 #maximum recovery rate
     #K_F = 1 #affinity of CaX_F for site
     delta_F = 0 #amount by which CaX_F increases as a result of stimulus
-    delta_D = 0 #amount by which CaX_D increases as a result of stimulus
+    delta_D = 1 #amount by which CaX_D increases as a result of stimulus
     T_E = 2 #decay constant of simulated EPSCs
 
     """TEST ONE METHOD ON ONE SET OF INPUTS"""
-    output = method(stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
+    data_1hz = pd.read_excel(r'~/Dropbox/Work/Jackman Lab/Modeling/Models and raw data_Dennis.xlsx', usecols = 'C,D', nrows = 20)
+    data_10hz = pd.read_excel(r'~/Dropbox/Work/Jackman Lab/Modeling/Models and raw data_Dennis.xlsx', usecols = 'C,D', skiprows = 22, nrows = 20)
+    data_20hz = pd.read_excel(r'~/Dropbox/Work/Jackman Lab/Modeling/Models and raw data_Dennis.xlsx', usecols = 'C,D', skiprows = 44, nrows = 20)
+    data_50hz = pd.read_excel(r'~/Dropbox/Work/Jackman Lab/Modeling/Models and raw data_Dennis.xlsx', usecols = 'C,D', skiprows = 66, nrows = 20)
 
-    fig = plt.plot(range(n_pulses), output.EPSC)
+    EPSC_1hz = data_1hz.to_numpy()[:,0]
+    stdev_1hz = data_1hz.to_numpy()[:,1]
+    EPSC_10hz = data_10hz.to_numpy()[:,0]
+    stdev_10hz = data_10hz.to_numpy()[:,1]
+    EPSC_20hz = data_20hz.to_numpy()[:,0]
+    stdev_20hz = data_20hz.to_numpy()[:,1]
+    EPSC_50hz = data_50hz.to_numpy()[:,0]
+    stdev_50hz = data_50hz.to_numpy()[:,1]
+
+    #output = method(stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
+
+    # print(output.EPSC)
+    # print(EPSC_20hz)
+    # print(metrics.r2_score(EPSC_20hz, output.EPSC))
+    # fig = plt.plot(range(n_pulses), output.EPSC)
+    # plt.plot(range(n_pulses), EPSC_20hz, 'b.')
+    # plt.show()
+    """TEST TWO METHODS"""
+    output1 = regular_train(stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
+    output2 = DittmanRK1(stimulus_times, max_time, N_T, roh, F_1, T_F, T_D, K_D, k_0, k_max, delta_F, delta_D, T_E)
+
+    # print(np.asarray(output1.F)*np.asarray(output1.D)/.802)
+    print(output1.EPSC)
+    # print(output2.F[stimulus_times-1]*output2.D[stimulus_times-1]/.802)
+    print(output2.EPSC)
+    #print(output2.F[stimulus_times-1]*output2.D[stimulus_times-1]/(output2.F[0]*output2.D[0]))
+    #print(output2.D[stimulus_times])
+
+    #print(EPSC_20hz)
+    print(metrics.r2_score(EPSC_20hz, output1.EPSC))
+    print(metrics.r2_score(EPSC_20hz, output2.EPSC))
+    fig = plt.plot(range(n_pulses), output1.EPSC)
+    plt.plot(range(n_pulses), output2.EPSC)
+    plt.plot(range(n_pulses), EPSC_20hz, 'b.')
     plt.show()
 
     """TEST ONE METHOD AT TWO FREQUENCIES ACROSS A RANGE OF INPUTS"""
