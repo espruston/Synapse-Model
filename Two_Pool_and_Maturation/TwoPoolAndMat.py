@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.integrate import solve_ivp
-from math import e, floor
+from math import e, prod, floor
 
 class two_pool(object):
     """class for two pool model
@@ -119,39 +119,150 @@ class maturation(object):
         self.T_maturation = T_maturation
         self.T_facilitation = T_facilitation
 
-# class sequentialRK1(object):
-#
-#     def __init__(self, stimulus_times, step_size, k_basal, k_prim, k_unprim, k_fill, k_unfill, k_on, k_off, b, gamma, T_Ca_decay):
-#
-#         ts = np.linspace(1,stimulus_times[-1],stimulus_times[-1])
-#
-#         Ca_1 = Ca_influx*(e**(-1*t/T_Ca_decay) #simnple exponential decay of calcium from max value of Ca_influx
-#         Ca = np.zeros(stimulus_times[-1]) #functional alpha function
-#
-#         for i in range(len(stimulus_times)):
-#             stimulus = stimulus_times[i]
-#             Ca[stimulus-1:stimulus_times[-1]-1] += alpha_1[0:stimulus_times[-1]-stimulus]) #calculate effect of each stimulus on the Ca level
-#
-#         def vectorfield(states, t):
-#
-#             Unprime, Prime, Ca0_Releaseable, Ca1_Releaseable, Ca2_Releaseable, Ca3_Releaseable, Ca4_Releaseable, Ca5_Releaseable = states
-#
-#             if t in ts:
-#                 Ca_val = Ca[t]
-#             else:
-#                 Ca_val = Ca[floor(t)]*e**(-1*(int(t) - floor(t))/T_Ca_decay)
-#
-#             #create f = [dUnprime, dPrime, dCa0_Releaseable, dCa1_Releaseable, dCa2_Releaseable, dCa3_Releaseable, dCa4_Releaseable, dCa5_Releaseable, V_fused]
-#             f = [k_basal - k_prim*Ca_val*Unprime + k_unprim*Prime,
-#             k_prim*Ca_val*Unprime - (k_unprim + k_fill)*Prime + k_unfill*Ca0_Releaseable,
-#             k_fill*Prime - (5*k_on*Ca_val + k_unfill)*Ca0_Releaseable + k_off*b**0*Ca1_Releaseable, 5*k_on*Ca_val*Ca0_Releaseable - (1*k_off*b**0 + 4*k_on*Ca_val)*Ca1_Releaseable + 2*k_off*b**1*Ca2_Releaseable,
-#             4*k_on*Ca_val*Ca1_Releaseable - (2*k_off*b**1 + 3*k_on*Ca_val)*Ca2_Releaseable + 3*k_off*b**2*Ca3_Releaseable,
-#             3*k_on*Ca_val*Ca2_Releaseable - (3*k_off*b**2 + 2*k_on*Ca_val)*Ca3_Releaseable + 4*k_off*b**3*Ca4_Releaseable,
-#             2*k_on*Ca_val*Ca3_Releaseable - (4*k_off*b**3 + 1*k_on*Ca_val)*Ca4_Releaseable + 5*k_off*b**4*Ca5_Releaseable,
-#             k_on*Ca_val*Ca4_Releaseable - (gamma + 5*k_off*b**4)*Ca5_Releaseable,
-#
-#
-#             return f
-#
-#         initial_conditions = [1, 1, .2, 0, 0, 0, 0, 0]
-#         sols = solve_ivp(vectorfield, (1,t[-1]+100), initial_conditions, t_eval = ts)
+class maturation_2(object):
+
+    def __init__(self, stimulus_times, step_size, k_rep, k_prim, k_unprim, k_on_1, k_off_1, k_on_2, k_off_2, f, s, k_fuse, Ca_rest, Ca_spike, T_Ca_decay):
+
+        #assume that the reserve pool is non depletable
+        m = 2 #second sensor cooperativity of 2
+        n = 5 #syt1 Ca cooperativity of 5
+
+        state = np.zeros((m+1)*(n+1) + 2) #[all mature states, Immature, empty sites]
+
+        def initial_state():
+
+            for i in range(m+1):
+                for j in range(n+1):
+                    state[i*j] =
+            return
+
+        ###
+
+        def dCa():
+
+            if t in stimulus_times:
+                return Ca_spike
+            return
+
+        ###
+
+        #Partials with respect to time, number after subscript are number of Ca bound syt 1 and Ca bound second sensor respectively
+
+        def dImmature(): #function for number of immature vesicles
+
+            return
+        # def dImmature_00():
+        #
+        #     return
+        #
+        # def dImmature_10():
+        #
+        #     return
+        #
+        # def dImmature_20():
+        #
+        #     return
+        #
+        # def dImmature_30():
+        #
+        #     return
+        #
+        # def dImmature_40():
+        #
+        #     return
+        #
+        # def dImmature_50():
+        #
+        #     return
+        ###
+
+        def dMature_00():
+
+            return
+
+        def dMature_10():
+
+            return
+
+        def dMature_20():
+
+            return
+
+        def dMature_30():
+
+            return
+
+        def dMature_40():
+
+            return
+
+        def dMature_50():
+
+            return
+
+        ###
+
+        def dMature_01():
+
+            return
+
+        def dMature_11():
+
+            return
+
+        def dMature_21():
+
+            return
+
+        def dMature_31():
+
+            return
+
+        def dMature_41():
+
+            return
+
+        def dMature_51():
+
+            return
+
+        ###
+
+        def dMature_02():
+
+            return
+
+        def dMature_12():
+
+            return
+
+        def dMature_22():
+
+            return
+
+        def dMature_32():
+
+            return
+
+        def dMature_42():
+
+            return
+
+        def dMature_52():
+
+            return
+
+
+
+
+
+
+
+        ts = np.linspace(1,stimulus_times[-1],stimulus_times[-1])
+
+        Ca_1 = Ca_influx*(e**(-1*t/T_Ca_decay) #simnple exponential decay of calcium from max value of Ca_influx
+        Ca = np.zeros(stimulus_times[-1]) #functional alpha function
+
+        for i in range(len(stimulus_times)):
+            stimulus = stimulus_times[i]
+            Ca[stimulus-1:stimulus_times[-1]-1] += alpha_1[0:stimulus_times[-1]-stimulus]) #calculate effect of each stimulus on the Ca level
