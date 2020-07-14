@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.integrate import solve_ivp
-from math import e, prod, floor
+from math import e, floor, factorial
 
 class two_pool(object):
     """class for two pool model
@@ -121,20 +121,18 @@ class maturation(object):
 
 class maturation_2(object):
 
-    def __init__(self, stimulus_times, step_size, k_rep, k_prim, k_unprim, k_on_1, k_off_1, k_on_2, k_off_2, f, s, k_fuse, Ca_rest, Ca_spike, T_Ca_decay):
+    def __init__(self, stimulus_times, step_size, k_rep, k_mat, k_unmat, k_on_1, k_off_1, k_on_2, k_off_2, f, s, k_fuse_basal, Ca_rest, Ca_spike, T_Ca_decay):
 
+        #Ca sensors are modeled as silent for immature vesicles
         #assume that the reserve pool is non depletable
-        m = 2 #second sensor cooperativity of 2
+        m = 2 #second sensor cooperativity of 2, god this notation is weird
         n = 5 #syt1 Ca cooperativity of 5
+        b = 0.5 #sensor cooperativity
 
-        state = np.zeros((m+1)*(n+1) + 2) #[all mature states, Immature, empty sites]
-
-        def initial_state():
-
-            for i in range(m+1):
-                for j in range(n+1):
-                    state[i*j] =
-            return
+        state = np.zeros((m+1,n+1)) #(i,j) holds the state of the pool with i Ca bound to second sensor and j Ca bound to syt1
+        for i in range(m+1):
+            for j in range(n+1):
+                state[i,j] = (((factorial(n)/factorial(n - j))*(Ca**j)*(k_on_1**j))/(factorial(j)*(b**(j*(j-1)/2))*(k_off_1**j)))*(((factorial(m)/factorial(m - i))*(Ca**i)*(k_on_2**i))/(factorial(i)*(b**(i*(i-1)/2))*(k_off_2**i))) #equation from Kobersmed et al for R(n,m)
 
         ###
 
@@ -149,6 +147,7 @@ class maturation_2(object):
         #Partials with respect to time, number after subscript are number of Ca bound syt 1 and Ca bound second sensor respectively
 
         def dImmature(): #function for number of immature vesicles
+
 
             return
         # def dImmature_00():
@@ -178,33 +177,33 @@ class maturation_2(object):
 
         def dMature_00():
 
-            return
+            return(k_rep*(1 - sum(state) - immature) + k_mat*immature - (5*Ca*k_on_1 + 2*Ca*k_on_2 + k_fuse_basal + k_unmat)*state[0,0] + k_off_1*state[1,0] + k_off_2*state[0,1])
 
         def dMature_10():
 
-            return
+            return(-1*(4*Ca*k_on_1 + k_off_1 + 2*Ca*k_on_2 + k_fuse_basal*f + k_unmat)*state[1,0] + 5*Ca*k_on_1*state[0,0] + 2*b*k_off_1*state[2,0] + k_off_2*state[1,1])
 
         def dMature_20():
 
-            return
+            return(-1*(3*Ca*k_on_1 + 2*b*k_off_1 + 2*Ca*k_on_2 + k_fuse_basal*f**2 + k_unmat)*state[2,0] + 4*Ca*k_on_1*state[1,0] + 3*b*k_off_1*state[3,0] + k_off_2*state[2,1])
 
         def dMature_30():
 
-            return
+            return(-1*(2*Ca*k_on_1 + 3*b**2*k_off_1 + 2*Ca*k_on_2 + k_fuse_basal*f**3 + k_unmat)*state[3,0] + 3*Ca*k_on_1*state[2,0] + 4*b**3*k_off_1*state[4,0] + k_off_2*state[3,1])
 
         def dMature_40():
 
-            return
+            return(-1*(Ca*k_on_1 + 4*b**3*k_off_1 + 2*Ca*k_off_2 + k_fuse_basal*f**4 + k_unmat)*state[4,0] + 2*Ca*k_on_1*state[3,0] + 5*b**4*k_off_1*state[5,0] + k_off_2*state[4,1])
 
         def dMature_50():
 
-            return
+            return(-1*(5*b**4*k_off_1 + 2*Ca*k_on_2 + k_fuse_basal*f**5 + k_unmat)*state[5,0] + Ca*k_on_1*state[4,0] + k_off_2*state[5,1])
 
         ###
 
         def dMature_01():
 
-            return
+            return(-1*(5*Ca*k_on_1))
 
         def dMature_11():
 
