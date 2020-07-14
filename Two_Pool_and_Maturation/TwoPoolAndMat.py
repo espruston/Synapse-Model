@@ -121,131 +121,139 @@ class maturation(object):
 
 class maturation_2(object):
 
-    def __init__(self, stimulus_times, step_size, k_rep, k_mat, k_unmat, k_on_1, k_off_1, k_on_2, k_off_2, f, s, k_fuse_basal, Ca_rest, Ca_spike, T_Ca_decay):
+    def __init__(self, stimulus_times, k_rep, k_mat, k_unmat, k_on_1, k_off_1, k_on_2, k_off_2, f, s, k_fuse_basal, Ca_rest, Ca_spike, T_Ca_decay):
 
         #Ca sensors are modeled as silent for immature vesicles
         #assume that the reserve pool is non depletable
         m = 2 #second sensor cooperativity of 2, god this notation is weird
         n = 5 #syt1 Ca cooperativity of 5
         b = 0.5 #sensor cooperativity
+        n_sites = 1
 
-        state = np.zeros((m+1,n+1)) #(i,j) holds the state of the pool with i Ca bound to second sensor and j Ca bound to syt1
+        state_ini = np.zeros((m+1)*(n+1)+3) #vectorized for solve_ivp usability
+        c = 0 #counter for vector index
         for i in range(m+1):
             for j in range(n+1):
-                state[i,j] = (((factorial(n)/factorial(n - j))*(Ca**j)*(k_on_1**j))/(factorial(j)*(b**(j*(j-1)/2))*(k_off_1**j)))*(((factorial(m)/factorial(m - i))*(Ca**i)*(k_on_2**i))/(factorial(i)*(b**(i*(i-1)/2))*(k_off_2**i))) #equation from Kobersmed et al for R(n,m)
+                state_ini[c] = (((factorial(n)/factorial(n - j))*(Ca_rest**j)*(k_on_1**j))/(factorial(j)*(b**(j*(j-1)/2))*(k_off_1**j)))*(((factorial(m)/factorial(m - i))*(Ca_rest**i)*(k_on_2**i))/(factorial(i)*(b**(i*(i-1)/2))*(k_off_2**i))) #equation from Kobersmed et al for R(n,m)
+                c += 1
 
-        immature =
-        Fused = 0
+        state_ini[-3] = n_sites - sum(state_ini[0:-3]) #number of immature vesicles
+        state_ini[-2] = 0 #number of fused vesicles
+        state_ini[-1] = Ca_rest
         ###
 
-        def dCa():
+        def dCa(t, Ca):
 
-            if t in stimulus_times:
-                return Ca_spike
-            return
+            return (-1/T_Ca_decay)*Ca + Ca_spike*(t in stimulus_times) #spike calcium by Ca_spike at each pulse, otherwise, decay to 0 with characteristic time T_Ca_decay
+
+        ###
+
+        #Partials with respect to time, number after subscript are number of Ca bound syt 1 and Ca bound second sensor respectively
+
+        def dImmature(state): #function for number of immature vesicles
+
+            return(k_unmat*np.sum(state[0:-2]) - k_mat*state[-2])
+
+        ###
+
+        def dMature_00(state, Ca):
+
+            return(k_rep*(n_sites - sum(state[0:-1])) + k_mat*state[-2] - (5*Ca*k_on_1 + 2*Ca*k_on_2 + k_fuse_basal + k_unmat)*state[0] + k_off_1*state[1] + k_off_2*state[6])
+
+        def dMature_10(state, Ca):
+
+            return(-1*(4*Ca*k_on_1 + k_off_1 + 2*Ca*k_on_2 + k_fuse_basal*f + k_unmat)*state[1] + 5*Ca*k_on_1*state[0] + 2*b*k_off_1*state[2] + k_off_2*state[7])
+
+        def dMature_20(state, Ca):
+
+            return(-1*(3*Ca*k_on_1 + 2*b*k_off_1 + 2*Ca*k_on_2 + k_fuse_basal*f**2 + k_unmat)*state[2] + 4*Ca*k_on_1*state[1] + 3*b*k_off_1*state[3] + k_off_2*state[8])
+
+        def dMature_30(state, Ca):
+
+            return(-1*(2*Ca*k_on_1 + 3*b**2*k_off_1 + 2*Ca*k_on_2 + k_fuse_basal*f**3 + k_unmat)*state[3] + 3*Ca*k_on_1*state[2] + 4*b**3*k_off_1*state[4] + k_off_2*state[9])
+
+        def dMature_40(state, Ca):
+
+            return(-1*(Ca*k_on_1 + 4*b**3*k_off_1 + 2*Ca*k_off_2 + k_fuse_basal*f**4 + k_unmat)*state[4] + 2*Ca*k_on_1*state[3] + 5*b**4*k_off_1*state[5] + k_off_2*state[10])
+
+        def dMature_50(state, Ca):
+
+            return(-1*(5*b**4*k_off_1 + 2*Ca*k_on_2 + k_fuse_basal*f**5 + k_unmat)*state[5] + Ca*k_on_1*state[4] + k_off_2*state[11])
+
+        ###
+
+        def dMature_01(state, Ca):
+
+            return(-1*(5*Ca*k_on_1 + Ca*k_on_2 + k_off_2 + k_fuse_basal*s + k_unmat)*state[6] + k_off_1*state[7] + 2*Ca*k_on_2*state[0] + 2*b*k_off_2*state[12])
+
+        def dMature_11(state, Ca):
+
+            return(-1*(4*Ca*k_on_1 + k_off_1 + Ca*k_on_2 + k_off_2 + k_fuse_basal*f*s + k_unmat)*state[7] + 5*Ca*k_on_1*state[6] + 2*b*k_off_1*state[2] + 2*Ca*k_on_2*state[1] + 2*b*k_off_2*state[13])
+
+        def dMature_21(state, Ca):
+
+            return(-1*(3*Ca*k_on_1 + 2*b*k_off_1 + Ca*k_on_2 + k_off_2 + k_fuse_basal*f**2*s + k_unmat)*state[8] + 4*Ca*k_on_1*state[7] + 3*b**2*k_off_1*state[9] + 2*Ca*k_on_2*state[2] + 2*b*k_off_2*state[14])
+
+        def dMature_31(state, Ca):
+
+            return(-1*(2*Ca*k_on_1 + 3*b**2*k_off_1 + Ca*k_on_2 + k_off_2 + k_fuse_basal*f**3*s + k_unmat)*state[9] + 3*Ca*k_on_1*state[8] + 4*b**3*k_off_1*state[10] + 2*Ca*k_on_2*state[3] + 2*b*k_off_2*state[15])
+
+        def dMature_41(state, Ca):
+
+            return(-1*(Ca*k_on_1 + 4*b**3*k_off_1 + Ca*k_on_2 + k_off_2 + k_fuse_basal*f**4*s + k_unmat)*state[10] + 2*Ca*k_on_1*state[9] + 5*b**3*k_off_1*state[11] + 2*Ca*k_on_2*state[4] + 2*b*k_off_2*state[16])
+
+        def dMature_51(state, Ca):
+
+            return(-1*(5*b**4*k_off_1 + Ca*k_on_2 + k_off_2 + k_fuse_basal*f**5*s + k_unmat)*state[11] + Ca*k_on_1*state[10] + 2*Ca*k_on_2*state[5] + 2*b*k_off_2*state[17])
+
+        ###
+
+        def dMature_02(state, Ca):
+
+            return(-1*(5*Ca*k_on_1 + 2*b*k_off_2 + k_fuse_basal*s**2 + k_unmat)*state[12] + k_off_1*state[13] + Ca*k_on_2*state[6])
+
+        def dMature_12(state, Ca):
+
+            return(-1*(4*Ca*k_on_1 + k_off_1 + 2*b*k_off_2 + k_fuse_basal*f*s**2 + k_unmat)*state[13] + 5*Ca*k_on_1*state[12] + 2*b*k_off_1*state[14] + Ca*k_on_2*state[7])
+
+        def dMature_22(state, Ca):
+
+            return(-1*(3*Ca*k_on_1 + 2*b*k_off_1 + 2*b*k_off_2 + k_fuse_basal*f**2*s**2 + k_unmat)*state[14] + 4*Ca*k_on_1*state[13] + 3*b**2*k_off_1*state[15] + Ca*k_on_2*state[8])
+
+        def dMature_32(state, Ca):
+
+            return(-1*(2*Ca*k_on_1 + 3*b**2*k_off_1 + 2*b*k_off_2 + Ca*k_on_2 + k_fuse_basal*f**3*s**2 + k_unmat)*state[15] + 3*Ca*k_on_1*state[14] + 4*b**3*k_off_1*state[16] + Ca*k_on_2*state[9])
+
+        def dMature_42(state, Ca):
+
+            return(-1*(Ca*k_on_1 + 4*b**3*k_off_1 + 2*b*k_off_2 + Ca*k_on_2 + k_fuse_basal*f**4*s**2 + k_unmat)*state[16] + 2*Ca*k_on_1*state[15] + 5*b**3*k_off_1*state[17] + Ca*k_on_2*state[10])
+
+        def dMature_52(state, Ca):
+
+            return(-1*(5*b**4*k_off_1 + 2*b*k_off_2 + k_fuse_basal*f**5*s**2 + k_unmat)*state[17] + Ca*k_on_1*state[16] + Ca*k_on_2*state[11])
+
+        def dFused(state):
+
+            return(k_fuse_basal*(state[0] + f*state[1] + f**2*state[2] + f**3*state[3] + f**4*state[4] + f**5*state[5] + s*state[6] + f*s*state[7] + f**2*s*state[8] + f**3*s*state[9] + f**4*s*state[10] + f**5*s*state[11] + s**2*state[12] + f*s**2*state[13] + f**2*s**2*state[14] + f**3*s**2*state[15] + f**4*s**2*state[16] + f**5*s**2*state[17]))
 
         ###
 
         def partials(t, y):
-            immature = y[0]
-            
-        #Partials with respect to time, number after subscript are number of Ca bound syt 1 and Ca bound second sensor respectively
+            state = y[0:-3]
+            immature = y[-3]
+            fused = y[-2]
+            Ca = y[-1]
 
-        def dImmature(): #function for number of immature vesicles
-
-            return(np.sum(k_unmat*state) - k_mat*immature)
-
-        ###
-
-        def dMature_00():
-
-            return(k_rep*(1 - sum(state) - immature) + k_mat*immature - (5*Ca*k_on_1 + 2*Ca*k_on_2 + k_fuse_basal + k_unmat)*state[0,0] + k_off_1*state[1,0] + k_off_2*state[0,1])
-
-        def dMature_10():
-
-            return(-1*(4*Ca*k_on_1 + k_off_1 + 2*Ca*k_on_2 + k_fuse_basal*f + k_unmat)*state[1,0] + 5*Ca*k_on_1*state[0,0] + 2*b*k_off_1*state[2,0] + k_off_2*state[1,1])
-
-        def dMature_20():
-
-            return(-1*(3*Ca*k_on_1 + 2*b*k_off_1 + 2*Ca*k_on_2 + k_fuse_basal*f**2 + k_unmat)*state[2,0] + 4*Ca*k_on_1*state[1,0] + 3*b*k_off_1*state[3,0] + k_off_2*state[2,1])
-
-        def dMature_30():
-
-            return(-1*(2*Ca*k_on_1 + 3*b**2*k_off_1 + 2*Ca*k_on_2 + k_fuse_basal*f**3 + k_unmat)*state[3,0] + 3*Ca*k_on_1*state[2,0] + 4*b**3*k_off_1*state[4,0] + k_off_2*state[3,1])
-
-        def dMature_40():
-
-            return(-1*(Ca*k_on_1 + 4*b**3*k_off_1 + 2*Ca*k_off_2 + k_fuse_basal*f**4 + k_unmat)*state[4,0] + 2*Ca*k_on_1*state[3,0] + 5*b**4*k_off_1*state[5,0] + k_off_2*state[4,1])
-
-        def dMature_50():
-
-            return(-1*(5*b**4*k_off_1 + 2*Ca*k_on_2 + k_fuse_basal*f**5 + k_unmat)*state[5,0] + Ca*k_on_1*state[4,0] + k_off_2*state[5,1])
-
-        ###
-
-        def dMature_01():
-
-            return(-1*(5*Ca*k_on_1 + Ca*k_on_2 + k_off_2 + k_fuse_basal*s + k_unmat)*state[0,1] + k_off_1*state[1,1] + 2*Ca*k_on_2*state[0,0] + 2*b*k_off_2*state[0,2])
-
-        def dMature_11():
-
-            return(-1*(4*Ca*k_on_1 + k_off_1 + Ca*k_on_2 + k_off_2 + k_fuse_basal*f*s + k_unmat)*state[1,1] + 5*Ca*k_on_1*state[0,1] + 2*b*k_off_1*state[2,0] + 2*Ca*k_on_2*state[1,0] + 2*b*k_off_2*state[1,2])
-
-        def dMature_21():
-
-            return(-1*(3*Ca*k_on_1 + 2*b*k_off_1 + Ca*k_on_2 + k_off_2 + k_fuse_basal*f**2*s + k_unmat)*state[2,1] + 4*Ca*k_on_1*state[1,1] + 3*b**2*k_off_1*state[3,1] + 2*Ca*k_on_2*state[2,0] + 2*b*k_off_2*state[2,2])
-
-        def dMature_31():
-
-            return(-1*(2*Ca*k_on_1 + 3*b**2*k_off_1 + Ca*k_on_2 + k_off_2 + k_fuse_basal*f**3*s + k_unmat)*state[3,1] + 3*Ca*k_on_1*state[2,1] + 4*b**3*k_off_1*state[4,1] + 2*Ca*k_on_2*state[3,0] + 2*b*k_off_2*state[3,2])
-
-        def dMature_41():
-
-            return(-1*(Ca*k_on_1 + 4*b**3*k_off_1 + Ca*k_on_2 + k_off_2 + k_fuse_basal*f**4*s + k_unmat)*state[4,1] + 2*Ca*k_on_1*state[3,1] + 5*b**3*k_off_1*state[5,1] + 2*Ca*k_on_2*state[4,0] + 2*b*k_off_2*state[4,2])
-
-        def dMature_51():
-
-            return(-1*(5*b**4*k_off_1 + Ca*k_on_2 + k_off_2 + k_fuse_basal*f**5*s + k_unmat)*state[5,1] + Ca*k_on_1*state[4,1] + 2*Ca*k_on_2*state[5,0] + 2*b*k_off_2*state[5,2])
-
-        ###
-
-        def dMature_02():
-
-            return(-1*(5*Ca*k_on_1 + 2*b*k_off_2 + k_fuse_basal*s**2 + k_unmat)*state[0,2] + k_off_1*state[1,2] + Ca*k_on_2*state[0,1])
-
-        def dMature_12():
-
-            return(-1*(4*Ca*k_on_1 + k_off_1 + 2*b*k_off_2 + k_fuse_basal*f*s**2 + k_unmat)*state[1,2] + 5*Ca*k_on_1*state[0,2] + 2*b*k_off_1*state[2,2] + Ca*k_on_2*state[1,1])
-
-        def dMature_22():
-
-            return(-1*(3*Ca*k_on_1 + 2*b*k_off_1 + 2*b*k_off_2 + k_fuse_basal*f**2*s**2 + k_unmat)*state[2,2] + 4*Ca*k_on_1*state[1,2] + 3*b**2*k_off_1*state[3,2] + Ca*k_on_2*state[2,1])
-
-        def dMature_32():
-
-            return(-1*(2*Ca*k_on_1 + 3*b**2*k_off_1 + 2*b*k_off_2 + Ca*k_on_2 + k_fuse_basal*f**3*s**2 + k_unmat)*state[3,2] + 3*Ca*k_on_1*state[2,2] + 4*b**3*k_off_1*state[4,2] + Ca*k_on_2*state[3,1])
-
-        def dMature_42():
-
-            return(-1*(Ca*k_on_1 + 4*b**3*k_off_1 + 2*b*k_off_2 + Ca*k_on_2 + k_fuse_basal*f**4*s**2 + k_unmat)*state[4,2] + 2*Ca*k_on_1*state[3,2] + 5*b**3*k_off_1*state[5,2] + Ca*k_on_2*state[4,1])
-
-        def dMature_52():
-
-            return(-1*(5*b**4*k_off_1 + 2*b*k_off_2 + k_fuse_basal*f**5*s**2 + k_unmat)*state[5,2] + Ca*k_on_1*state[4,2] + Ca*k_on_2*state[5,1])
-
-        def dFused():
-
-            return(k_fuse_basal*(state[0,0] + f*state[1,0] + f**2*state[2,0] + f**3*state[3,0] + f**4*state[4,0] + f**5*state[5,0] + s*state[0,1] + f*s*state[1,1] + f**2*s*state[2,1] + f**3*s*state[3,1] + f**4*s*state[4,1] + f**5*s*state[5,1] + s**2*state[0,2] + f*s**2*state[1,2] + f**2*s**2*state[2,2] + f**3*s**2*state[3,2] + f**4*s**2*state[4,2] + f**5*s**2*state[5,2]))
+            return(dMature_00(state, Ca), dMature_10(state, Ca), dMature_20(state, Ca), dMature_30(state, Ca), dMature_40(state, Ca), dMature_50(state, Ca), dMature_01(state, Ca), dMature_11(state, Ca), dMature_21(state, Ca), dMature_31(state, Ca), dMature_41(state, Ca), dMature_51(state, Ca), dMature_02(state, Ca), dMature_12(state, Ca), dMature_22(state, Ca), dMature_32(state, Ca), dMature_42(state, Ca), dMature_52(state, Ca), dImmature(state), dFused(state), dCa(t, Ca))
 
 
+        max_time = stimulus_times[-1] + stimulus_times[0]*2
+        ts = np.linspace(0, max_time, int(max_time+1))
 
+        self.sol = solve_ivp(partials, [0, max_time], state_ini, t_eval = ts)
 
-
-        ts = np.linspace(1,stimulus_times[-1],stimulus_times[-1])
-
-        Ca_1 = Ca_influx*(e**(-1*t/T_Ca_decay) #simnple exponential decay of calcium from max value of Ca_influx
-        Ca = np.zeros(stimulus_times[-1]) #functional alpha function
-
-        for i in range(len(stimulus_times)):
-            stimulus = stimulus_times[i]
-            Ca[stimulus-1:stimulus_times[-1]-1] += alpha_1[0:stimulus_times[-1]-stimulus]) #calculate effect of each stimulus on the Ca level
+        self.state_ini = state_ini
+        self.ts = ts
+        self.max_time = max_time
+        self.n_sites = n_sites
+        self.b = b
