@@ -146,12 +146,15 @@ class maturation_2(object):
 
         ###
 
+        def partials(t, y):
+            immature = y[0]
+            
         #Partials with respect to time, number after subscript are number of Ca bound syt 1 and Ca bound second sensor respectively
 
         def dImmature(): #function for number of immature vesicles
 
             return(np.sum(k_unmat*state) - k_mat*immature)
-        
+
         ###
 
         def dMature_00():
