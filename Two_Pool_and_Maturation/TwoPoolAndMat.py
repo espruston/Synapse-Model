@@ -134,6 +134,8 @@ class maturation_2(object):
             for j in range(n+1):
                 state[i,j] = (((factorial(n)/factorial(n - j))*(Ca**j)*(k_on_1**j))/(factorial(j)*(b**(j*(j-1)/2))*(k_off_1**j)))*(((factorial(m)/factorial(m - i))*(Ca**i)*(k_on_2**i))/(factorial(i)*(b**(i*(i-1)/2))*(k_off_2**i))) #equation from Kobersmed et al for R(n,m)
 
+        immature =
+        Fused = 0
         ###
 
         def dCa():
@@ -148,31 +150,8 @@ class maturation_2(object):
 
         def dImmature(): #function for number of immature vesicles
 
-
-            return
-        # def dImmature_00():
-        #
-        #     return
-        #
-        # def dImmature_10():
-        #
-        #     return
-        #
-        # def dImmature_20():
-        #
-        #     return
-        #
-        # def dImmature_30():
-        #
-        #     return
-        #
-        # def dImmature_40():
-        #
-        #     return
-        #
-        # def dImmature_50():
-        #
-        #     return
+            return(np.sum(k_unmat*state) - k_mat*immature)
+        
         ###
 
         def dMature_00():
@@ -203,55 +182,57 @@ class maturation_2(object):
 
         def dMature_01():
 
-            return(-1*(5*Ca*k_on_1))
+            return(-1*(5*Ca*k_on_1 + Ca*k_on_2 + k_off_2 + k_fuse_basal*s + k_unmat)*state[0,1] + k_off_1*state[1,1] + 2*Ca*k_on_2*state[0,0] + 2*b*k_off_2*state[0,2])
 
         def dMature_11():
 
-            return
+            return(-1*(4*Ca*k_on_1 + k_off_1 + Ca*k_on_2 + k_off_2 + k_fuse_basal*f*s + k_unmat)*state[1,1] + 5*Ca*k_on_1*state[0,1] + 2*b*k_off_1*state[2,0] + 2*Ca*k_on_2*state[1,0] + 2*b*k_off_2*state[1,2])
 
         def dMature_21():
 
-            return
+            return(-1*(3*Ca*k_on_1 + 2*b*k_off_1 + Ca*k_on_2 + k_off_2 + k_fuse_basal*f**2*s + k_unmat)*state[2,1] + 4*Ca*k_on_1*state[1,1] + 3*b**2*k_off_1*state[3,1] + 2*Ca*k_on_2*state[2,0] + 2*b*k_off_2*state[2,2])
 
         def dMature_31():
 
-            return
+            return(-1*(2*Ca*k_on_1 + 3*b**2*k_off_1 + Ca*k_on_2 + k_off_2 + k_fuse_basal*f**3*s + k_unmat)*state[3,1] + 3*Ca*k_on_1*state[2,1] + 4*b**3*k_off_1*state[4,1] + 2*Ca*k_on_2*state[3,0] + 2*b*k_off_2*state[3,2])
 
         def dMature_41():
 
-            return
+            return(-1*(Ca*k_on_1 + 4*b**3*k_off_1 + Ca*k_on_2 + k_off_2 + k_fuse_basal*f**4*s + k_unmat)*state[4,1] + 2*Ca*k_on_1*state[3,1] + 5*b**3*k_off_1*state[5,1] + 2*Ca*k_on_2*state[4,0] + 2*b*k_off_2*state[4,2])
 
         def dMature_51():
 
-            return
+            return(-1*(5*b**4*k_off_1 + Ca*k_on_2 + k_off_2 + k_fuse_basal*f**5*s + k_unmat)*state[5,1] + Ca*k_on_1*state[4,1] + 2*Ca*k_on_2*state[5,0] + 2*b*k_off_2*state[5,2])
 
         ###
 
         def dMature_02():
 
-            return
+            return(-1*(5*Ca*k_on_1 + 2*b*k_off_2 + k_fuse_basal*s**2 + k_unmat)*state[0,2] + k_off_1*state[1,2] + Ca*k_on_2*state[0,1])
 
         def dMature_12():
 
-            return
+            return(-1*(4*Ca*k_on_1 + k_off_1 + 2*b*k_off_2 + k_fuse_basal*f*s**2 + k_unmat)*state[1,2] + 5*Ca*k_on_1*state[0,2] + 2*b*k_off_1*state[2,2] + Ca*k_on_2*state[1,1])
 
         def dMature_22():
 
-            return
+            return(-1*(3*Ca*k_on_1 + 2*b*k_off_1 + 2*b*k_off_2 + k_fuse_basal*f**2*s**2 + k_unmat)*state[2,2] + 4*Ca*k_on_1*state[1,2] + 3*b**2*k_off_1*state[3,2] + Ca*k_on_2*state[2,1])
 
         def dMature_32():
 
-            return
+            return(-1*(2*Ca*k_on_1 + 3*b**2*k_off_1 + 2*b*k_off_2 + Ca*k_on_2 + k_fuse_basal*f**3*s**2 + k_unmat)*state[3,2] + 3*Ca*k_on_1*state[2,2] + 4*b**3*k_off_1*state[4,2] + Ca*k_on_2*state[3,1])
 
         def dMature_42():
 
-            return
+            return(-1*(Ca*k_on_1 + 4*b**3*k_off_1 + 2*b*k_off_2 + Ca*k_on_2 + k_fuse_basal*f**4*s**2 + k_unmat)*state[4,2] + 2*Ca*k_on_1*state[3,2] + 5*b**3*k_off_1*state[5,2] + Ca*k_on_2*state[4,1])
 
         def dMature_52():
 
-            return
+            return(-1*(5*b**4*k_off_1 + 2*b*k_off_2 + k_fuse_basal*f**5*s**2 + k_unmat)*state[5,2] + Ca*k_on_1*state[4,2] + Ca*k_on_2*state[5,1])
 
+        def dFused():
 
+            return(k_fuse_basal*(state[0,0] + f*state[1,0] + f**2*state[2,0] + f**3*state[3,0] + f**4*state[4,0] + f**5*state[5,0] + s*state[0,1] + f*s*state[1,1] + f**2*s*state[2,1] + f**3*s*state[3,1] + f**4*s*state[4,1] + f**5*s*state[5,1] + s**2*state[0,2] + f*s**2*state[1,2] + f**2*s**2*state[2,2] + f**3*s**2*state[3,2] + f**4*s**2*state[4,2] + f**5*s**2*state[5,2]))
 
 
 
