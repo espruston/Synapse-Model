@@ -1,0 +1,114 @@
+%*******************************************************************************%
+%                     Calcium solver, version 5.4.5				%
+%                   Victor Matveev,  matveev@njit.edu				%
+%                   New Jersey Institute of Technology				%
+%                            May 23, 2005					%
+%*******************************************************************************%
+%										%
+%    This is a CalC file for fitting EPSC&Ca parameters to values achieved	%
+%         from paired pulse recordings in different Ca concentrations		%
+%										%
+%===============================================================================%
+
+
+numstim = 
+
+%%%%%%%%%%%% SPACE AND BOUNDARIES %%%%%%%%%%%%
+
+geometry
+
+height = 
+
+AZ_size = 
+
+%volume -0.37 0.37 -0.37 0.37 0 height %51    	% Defines the diffusion volume, a cube of .74x.74x.51 micron
+%volume -0.27 0.27 -0.27 0.27 0 0.4
+
+volume 0 AZ_size 0 height				% inner radius, outer radius, limiting z-values
+
+grid; 
+stretch.factor = 1.05;              % The spatial grid will have 31 nodes in each direction
+N =     
+
+Ca.D = 0.223           			% The diffusion coefficient of calcium is 0.223 µm²/ms Allbritton 1992
+Ca.bgr = 0.05          			% Initial calcium concentration is 0.05 µM
+
+Ca.source 0 0       			% Defines the calcium channel/source location: there
+                      			% will be one channel located in the center of the box
+
+Ca.bc Noflux Noflux ... 		% Boundary conditions are reflective (Noflux) on x- and 
+      Noflux Noflux 		% y-surfaces, and there are "Pump" boundary conditions
+	      		% on z-surfaces, on the bottom and top "membranes"
+
+uptake = 0.4 				% was 0.4 -> Helmchen et al., 1997;
+					% volume-distributed uptake into intracellular stores, 1/ms
+					% no extrusion in Vyleta&Jonas, 2014
+
+%%%%%%%%%%%% BUFFERS %%%%%%%%%%%%
+
+buffer Bm            			% buffer "Bm"
+Bm.D = 0.001          			% Its diffusion coefficient is 0.001 µm²/ms,
+Bm.KD = 100            			% its calcium affinity is 100 µM
+Bm.kplus = 0.1      			% and calcium binding rate is 0.1/µM*ms
+Bm.total = 4000    			% The total (bound + unbound) concentration of buffer is 4000 µM
+					% Helmchen et al., 1997, Xu et al., 1997
+
+buffer ATP            			% buffer "ATP"
+ATP.D = 0.22          			% Its diffusion coefficient is 0.22 µm²/ms,
+ATP.KD = 200            		% its calcium affinity is 200 µM
+ATP.kminus = 100      			% and calcium unbinding rate is 100/ms Naragi&Neher, 1997
+ATP.total = 650     			% The total (bound + unbound) concentration of buffer is 650 µM
+
+%buffer fast
+%fast.D = 0.05
+%fast.kplus = 0.8
+%fast.kminus = 0.176
+%fast.total = 300
+
+%%%%%%%%%%%% LOCATIONS %%%%%%%%%%%%
+
+% none for now, not necessary for plot 1D
+
+%%%%%%%%%%%% ADAPTIVE RUNS %%%%%%%%%%%%
+
+iChannel = 0.6				% electrical charge of channel current, 1E-15 Coulomb (fC)
+Sigma = 0.1528779241; % => FWHM = 360 µs
+
+gaussian1 := (1/(Sigma*2.506628))*exp(-0.5*((t-2)/Sigma)^2)
+
+% Run adaptive [Time] [accuracy]
+% !!! Accuracy has to be given for each step, otherwise value from step before is used !!!
+ 
+Run adaptive 0.5 0.001			% This defines the simulation itself, which consists of 
+current = 0				% an 0.5 ms closed channel interval
+
+Run adaptive 3	0.0001 	 								  
+current = iChannel*gaussian1 pA 	% a 3 ms open channel interval with a channel current of iChannel*gaussian,
+
+Run 7 	0.01						  
+current = 0				% a 7 ms closed channel interval,
+
+
+gaussian2 := (1/(Sigma*2.506628))*exp(-0.5*((t-12)/Sigma)^2)
+
+Run adaptive 3	0.0001 	 								  
+current = iChannel*gaussian2 pA 	% a 3 ms open channel interval with a channel current of iChannel*gaussian,
+
+Run 150	0.01						  
+current = 0				% a 7 ms closed channel interval,
+%
+%	end
+%end
+
+
+%%%%%%%%%%%% PLOTS %%%%%%%%%%%%
+
+plot.steps.1D = 1210000			% Accuracy of plotted timesteps
+%plot 1D.mute Ca x 0 0.01 CalciumA_1D	% plot along x-axis with y=0 and z=10nm
+
+plot 1D.mute Ca r 0.01 CalciumA_1D
+
+%plot.steps.binary = 4000
+%plot binary Ca fourDplot.dat
+
+%%%%%%%%%%% THE END %%%%%%%%%%%
