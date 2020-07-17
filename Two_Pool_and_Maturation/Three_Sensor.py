@@ -1,127 +1,291 @@
 import numpy as np
-from scipy.stats import norm
-from matplotlib import pyplot as plt
-if __name__ == "__main__":
+from math import e
 
-    K_D_1 = 43e-6 #syt1 Ca K_D, M, Brandt/Knight
-    K_D_3 = 2e-6 #syt3 Ca K_D, M, Sugita
-    K_D_7 = 1.5e-6 #syt7 Ca K_D, M, Knight
+class Skyler_dual_sensor(object):
 
-    #membrane association constants
-    #Ca dependent k_on
-    #k_on_1 = 1.63e5 #syt1 M-1ms-1, Knight
-    #k_on_1 = 1.2e7 #Hui
-    #k_on_3 = 3e5 #syt3 M-1ms-1, Hui
-    #k_on_7 = 7.333e3 #syt7 M-1ms-1, Knight
-    #k_on_7 = 2.333e4 #fits skylers model well with syt1 from Knight
-    #k_on_7 = 3e5 #estimate from likeness to syt3 Hui
+    def __init__(self, K_D_1, K_D_7, k_on_1, k_on_7, k_off_1, k_off_7, Ca_rest, Ca_residual, T_Ca_decay, Ca_spike, FWHM, delta_t, max_time, stimulus_times):
 
-    #Ca indpendent k_on
-    k_on_1 = .415 #ms-1, Jackman
-    k_on_3 = .190 #ms-1, est. from syt 7 vals, Jackman
-    k_on_7 = .190 #ms-1, Jackman
+        sigma = FWHM/2.35 #variance
+        mu = 2*FWHM #time at which Ca_spike is maximal (ms)
 
-    k_off_1 = .670 #syt1 ms-1, 90% amplitude, major rate, double exponential, Knight
-    #k_off_1 = .378 #Hui
-    k_off_3 = .0128 #syt3 ms-1, Hui
-    k_off_7 = .011 #syt7 ms-1, Knight
-    #k_off_7 = .019*.25 + .008*.75 #Hui, crude approx of the double exponential
+        def Ca_sim(stimulus_times):
 
-    cooperativity = 2
+            ts = np.arange(0,max_time+delta_t, delta_t) #simulate from t = 0 to t = max_time (inclusive) with a resolution of delta_t ms
+            Ca_sim = np.zeros(len(ts))
 
-    Ca_rest = 50e-9 #Resting calcium M, Jackman
-    Ca_residual = 250e-9 #Residual calcium M, Jackman
-    T_Ca_decay = 40 #Residual calcium decay constant s, Jackman
-    Ca_spike = 25e-6 #Local calcium after pulse M, Jackman
-    FWHM = .34 #Local calcium full width half maximum ms
-    sigma = FWHM/2.35 #variance
-    mu = 2*FWHM #time at which Ca_spike is maximal (ms)
+            Ca_sim[:] += Ca_rest
+            for t in stimulus_times:
+                spike_start_index = int(t/delta_t) #index for the Ca_sim vector corresponding to t
+                spike_peak_index = int((t+mu)/delta_t) #index for the Ca_sim vector corresponding to the peak of the spike initiated at t
 
-    delta_t = 1e-3 #time resolution, ms
+                Ca_sim[spike_start_index:] += Ca_spike*np.exp(-1*((ts[0:len(ts)-spike_start_index] - mu)/sigma)**2/2)
+                Ca_sim[spike_peak_index:] += Ca_residual*np.exp(-1*ts[0:-1*spike_peak_index]/T_Ca_decay) #when the pulse hits its peak, add in a residual decay component from that point on
 
-    def SinglePulse(sigma, mu, T_Ca_decay, Ca_rest):
 
-        t_spike = np.arange(0, mu+3*sigma+delta_t, delta_t)
-        spike_sim = Ca_spike*np.exp(-1*((t_spike - mu)/sigma)**2/2) + Ca_rest
+            return Ca_sim, ts
 
-        t_residual = np.arange(delta_t, 500-t_spike[-1], delta_t)
-        residual_sim = (spike_sim[-1] - Ca_rest)*np.exp(-1*t_residual/T_Ca_decay) + Ca_rest
 
-        Ca_sim = np.concatenate((spike_sim, residual_sim))
-        ts = np.concatenate((t_spike, t_residual+t_spike[-1]))
+        stimulus_times = [0] #for best efficiency, place first pulse at t=0
+        Ca_sim, ts = Ca_sim(stimulus_times)
 
-        return Ca_sim, ts
+        Ca_bound_syt1 = [0]
+        Ca_bound_syt7 = [0]
 
-    def PPR(sigma, mu, T_Ca_decay, Ca_rest):
+        membrane_bound_syt1 = [0]
+        membrane_bound_syt7 = [0]
 
-        t_spike = np.arange(0, mu+3*sigma+delta_t, delta_t) #simulate the spike up until after 3 sigma
-        spike_sim = Ca_spike*np.exp(-1*((t_spike - mu)/sigma)**2/2) + Ca_rest
+        #max_time ms simulation, time resolution of delta_t (ms)
+        for i in range(len(ts)):
 
-        t_residual1 = np.arange(delta_t, 20, delta_t)
-        residual_sim1 = (spike_sim[-1] - Ca_rest)*np.exp(-1*t_residual1/T_Ca_decay) + Ca_rest
-        residual_sim1[-1*len(spike_sim):] += spike_sim
+            Ca = Ca_sim[i]
 
-        t_residual2 = np.arange(delta_t, 500-t_residual1[-1]-t_spike[-1], delta_t)
-        residual_sim2 = (residual_sim1[-1] - Ca_rest)*np.exp(-1*t_residual2/T_Ca_decay) + Ca_rest
+            membrane_bound_syt1.append(membrane_bound_syt1[-1] + ((1 - membrane_bound_syt1[-1])*k_on_1*Ca_bound_syt1[-1] - membrane_bound_syt1[-1]*k_off_1)*delta_t)
+            membrane_bound_syt7.append(membrane_bound_syt7[-1] + ((1 - membrane_bound_syt7[-1])*k_on_7*Ca_bound_syt7[-1] - membrane_bound_syt7[-1]*k_off_7)*delta_t)
 
-        Ca_sim = np.concatenate((spike_sim, residual_sim1, residual_sim2))
-        ts = np.concatenate((t_spike, t_residual1+t_spike[-1], t_residual2+t_residual1[-1]+t_spike[-1]))
+            Ca_bound_syt1.append(1/(1+(K_D_1/Ca)**1.9))
+            Ca_bound_syt7.append(1/(1+(K_D_7/Ca)**2.8))
 
-        return Ca_sim, ts
+            # Ca_bound_syt1.append(Ca**2/(K_D_1**1.9 + Ca**1.9))
+            # Ca_bound_syt7.append(Ca**2/(K_D_7**2. + Ca**2.8))
 
-    Ca_sim, ts = SinglePulse(sigma, mu, T_Ca_decay, Ca_rest)
 
-    # plt.plot(ts, Ca_sim)
-    # plt.ylabel("Ca concentration (M)")
-    # plt.xlabel("time (ms)")
-    # plt.title("Simulated presynaptic Ca for 50hz PPR")
-    # plt.xlim(-10,500)
-    # plt.yscale('log')
-    #
-    # plt.show()
-    #
-    Ca_bound_syt1 = [0]
-    Ca_bound_syt3 = [0]
-    Ca_bound_syt7 = [0]
+        self.syt1 = membrane_bound_syt1
+        self.syt7 = membrane_bound_syt7
+        self.syt1Ca = Ca_bound_syt1
+        self.syt7Ca = Ca_bound_syt7
+        self.ts = ts
+        self.Ca = Ca_sim
+        self.norm_val = max(max(membrane_bound_syt1), max(membrane_bound_syt7))
+        self.norm_val_Ca = max(max(Ca_bound_syt1), max(Ca_bound_syt7))
 
-    bound_syt1 = [0]
-    bound_syt3 = [0]
-    bound_syt7 = [0]
 
-    #500 ms simulation, time resolution of delta_t (ms)
-    for i in range(len(ts)):
+class Evan_dual_sensor(object):
 
-        Ca = Ca_sim[i]
+    def __init__(self, K_A_1, K_A_7, Ca_rest, Ca_residual, T_Ca_decay, Ca_spike, FWHM, delta_t, max_time, stimulus_times):
 
-        bound_syt1.append(bound_syt1[-1] + ((1-bound_syt1[-1])*k_on_1*Ca_bound_syt1[-1] - bound_syt1[-1]*k_off_1)*delta_t) #multiplied by delta_t to account for rates being in ms and timestep being in us
-        bound_syt3.append(bound_syt3[-1] + ((1-bound_syt3[-1])*k_on_3*Ca_bound_syt3[-1] - bound_syt3[-1]*k_off_3)*delta_t)
-        bound_syt7.append(bound_syt7[-1] + ((1-bound_syt7[-1])*k_on_7*Ca_bound_syt7[-1] - bound_syt7[-1]*k_off_7)*delta_t)
+        PS = 20.8e-6 #M, PS
+        sigma = FWHM/2.35 #variance
+        mu = 2*FWHM #time at which Ca_spike is maximal (ms)
 
-        Ca_bound_syt1.append(Ca**2/(K_D_1+Ca**2))
-        Ca_bound_syt3.append(Ca**2/(K_D_3+Ca**2))
-        Ca_bound_syt7.append(Ca**2/(K_D_7+Ca**2))
+        def Ca_sim(stimulus_times):
 
-    norm_val = max(max(bound_syt1), max(bound_syt3), max(bound_syt7))
-    #norm_val = max(max(bound_syt1), max(bound_syt7))
-    norm_val_Ca = max(max(Ca_bound_syt1), max(Ca_bound_syt3), max(Ca_bound_syt7))
+            ts = np.arange(0,max_time+delta_t, delta_t) #simulate from t = 0 to t = max_time (inclusive) with a resolution of delta_t ms
+            Ca_sim = np.zeros(len(ts))
 
-    # plt.plot(ts, bound_syt1[1:]/norm_val, label = "Syt 1")
-    # plt.plot(ts, bound_syt3[1:]/norm_val, label = "Syt 3")
-    # plt.plot(ts, bound_syt7[1:]/norm_val, label = "Syt 7")
-    # plt.ylabel("Bound isoform (norm.)")
-    # plt.xlabel("time (ms)")
-    # plt.title("Simulated SYT membrane binding (single pulse)")
-    # plt.xlim(0,500)
-    # plt.ylim(0,1)
-    # plt.legend()
+            Ca_sim[:] += Ca_rest
+            for t in stimulus_times:
+                spike_start_index = int(t/delta_t) #index for the Ca_sim vector corresponding to t
+                spike_peak_index = int((t+mu)/delta_t) #index for the Ca_sim vector corresponding to the peak of the spike initiated at t
 
-    # plt.plot(ts, Ca_bound_syt1[1:]/norm_val_Ca, label = "Syt 1")
-    # plt.plot(ts, Ca_bound_syt3[1:]/norm_val_Ca, label = "Syt 3")
-    # plt.plot(ts, Ca_bound_syt7[1:]/norm_val_Ca, label = "Syt 7")
-    # plt.ylabel("Bound isoform (norm.)")
-    # plt.xlabel("time (ms)")
-    # plt.title("Simulated SYT membrane binding (single pulse)")
-    # plt.xlim(0,500)
-    # plt.legend()
+                Ca_sim[spike_start_index:] += Ca_spike*np.exp(-1*((ts[0:len(ts)-spike_start_index] - mu)/sigma)**2/2)
+                Ca_sim[spike_peak_index:] += Ca_residual*np.exp(-1*ts[0:-1*spike_peak_index]/T_Ca_decay) #when the pulse hits its peak, add in a residual decay component from that point on
 
-    plt.show()
+
+            return Ca_sim, ts
+
+
+        #stimulus_times = [0] #for best efficiency, place first pulse at t=0
+        Ca_sim, ts = Ca_sim(stimulus_times)
+
+        def binding_sim(ts):
+
+            Ca_bound_syt1 = [0]
+            Ca_bound_syt7 = [0]
+
+            # membrane_bound_syt1 = [0]
+            # membrane_bound_syt7 = [0]
+
+            membrane_bound_syt1 = []
+            membrane_bound_syt7 = []
+
+            #max_time ms simulation, time resolution of delta_t (ms)
+            for i in range(len(ts)):
+
+                Ca = Ca_sim[i]
+
+                membrane_bound_syt1.append((Ca**1.8/(K_A_1**1.8 + Ca**1.8))*Ca_bound_syt1[-1])
+                membrane_bound_syt7.append((Ca**2.7/(K_A_7**2.7 + Ca**2.7))*Ca_bound_syt7[-1])
+
+                # membrane_bound_syt1.append(membrane_bound_syt1[-1] + ((1 - membrane_bound_syt1[-1])*k_on_1*Ca - membrane_bound_syt1[-1]*k_off_1)*delta_t)
+                # membrane_bound_syt7.append(membrane_bound_syt7[-1] + ((1 - membrane_bound_syt7[-1])*k_on_7*Ca - membrane_bound_syt7[-1]*k_off_7)*delta_t)
+
+                Ca_bound_syt1.append(1/(1+(K_A_1/Ca)**1.9))
+                Ca_bound_syt7.append(1/(1+(K_A_7/Ca)**2.8))
+
+
+            return membrane_bound_syt1, membrane_bound_syt7
+
+
+        membrane_bound_syt1, membrane_bound_syt7 = binding_sim(ts)
+
+        # def fusion_sim(ts):
+        #
+        #     E_A_kT = 40
+        #     E_1_kT= 20
+        #     E_7_kT = 5
+        #     A = e**(-1*E_A_kT)
+        #
+        #     k_fuse = A*np.exp(membrane_bound_syt1*E_1_kT)*np.exp(membrane_bound_syt7*E_7_kT)
+        #
+        #     fusion = membrane_bound_syt1[-1]*membrane_bound_syt7[-1]*k_fuse
+        #
+        #     return k_fuse, fusion =
+        #
+        #
+        # fusion = fusion_sim(ts)
+
+        # E_A_kT = 40
+        # E_1_kT= 20
+        # E_7_kT = 5
+        # A = e**(-1*E_A_kT)
+        #
+        # membrane_bound_syt1 = [0]
+        # membrane_bound_syt7 = [0]
+        # fusion = []
+        # for i in range(len(ts)):
+        #
+        #     k_fuse = A*e**(membrane_bound_syt1[-1]*E_1_kT)*e**(membrane_bound_syt7[-1]*E_7_kT)
+        #     Ca = Ca_sim[i]
+        #
+        #     fusion.append(membrane_bound_syt1[-1]*membrane_bound_syt7[-1]*k_fuse)
+        #     membrane_bound_syt1.append(membrane_bound_syt1[-1] + ((1 - membrane_bound_syt1[-1])*k_on_1*Ca - membrane_bound_syt1[-1]*k_off_1)*delta_t)
+        #     membrane_bound_syt7.append(membrane_bound_syt7[-1] + ((1 - membrane_bound_syt7[-1])*k_on_7*Ca - membrane_bound_syt7[-1]*k_off_7)*delta_t)
+
+        self.ts = ts
+        self.Ca = Ca_sim
+        self.syt1 = membrane_bound_syt1/max(membrane_bound_syt1)
+        self.syt7 = membrane_bound_syt7/max(membrane_bound_syt7)
+        #self.syt1Ca = Ca_bound_syt1
+        #self.syt7Ca = Ca_bound_syt7
+        #self.norm_val_Ca = max(max(Ca_bound_syt1), max(Ca_bound_syt7))
+        #self.k_fuse = k_fuse
+
+
+class three_sensor(object):
+
+    def __init__(self, K_D_1, K_D_3, K_D_7, k_on_1, k_on_3, k_on_7, k_off_1, k_off_3, k_off_7, Ca_rest, Ca_residual, T_Ca_decay, Ca_spike, FWHM, delta_t, max_time, stimulus_times):
+
+        sigma = FWHM/2.35 #variance
+        mu = 2*FWHM #time at which Ca_spike is maximal (ms)
+
+        def CalcSim(stimulus_times):
+
+            ts = np.arange(0,max_time+delta_t, delta_t) #simulate from t = 0 to t = max_time (inclusive) with a resolution of delta_t ms
+            Ca_sim = np.zeros(len(ts))
+
+            Ca_sim[:] += Ca_rest
+            for t in stimulus_times:
+                spike_start_index = int(t/delta_t) #index for the Ca_sim vector corresponding to t
+                spike_peak_index = int((t+mu)/delta_t) #index for the Ca_sim vector corresponding to the peak of the spike initiated at t
+
+                Ca_sim[spike_start_index:] += Ca_spike*np.exp(-1*((ts[0:len(ts)-spike_start_index] - mu)/sigma)**2/2)
+                Ca_sim[spike_peak_index:] += Ca_residual*np.exp(-1*ts[0:-1*spike_peak_index]/T_Ca_decay) #when the pulse hits its peak, add in a residual decay component from that point on
+
+
+            return Ca_sim, ts
+
+        stimulus_times = [0] #for best efficiency, place first pulse at t=0
+        Ca_sim, ts = CalcSim(stimulus_times)
+
+        Ca_bound_syt1 = []
+        Ca_bound_syt3 = []
+        Ca_bound_syt7 = []
+
+        membrane_bound_syt1 = [0]
+        membrane_bound_syt3 = [0]
+        membrane_bound_syt7 = [0]
+
+        #max_time ms simulation, time resolution of delta_t (ms)
+        for i in range(len(ts)):
+
+            Ca = Ca_sim[i]
+
+            # Ca_bound_syt1.append(1/(1+(K_D_1/Ca)**1.9))
+            # Ca_bound_syt3.append(1/(1+(K_D_3/Ca)**2))
+            # Ca_bound_syt7.append(1/(1+(K_D_7/Ca)**2.8))
+
+            Ca_bound_syt1.append(Ca**2/(K_D_1 + Ca**1.9))
+            Ca_bound_syt3.append(Ca**2/(K_D_3 + Ca**2))
+            Ca_bound_syt7.append(Ca**2/(K_D_7 + Ca**2.8))
+
+            membrane_bound_syt1.append(membrane_bound_syt1[-1] + ((1 - membrane_bound_syt1[-1])*k_on_1*Ca_bound_syt1[-1] - membrane_bound_syt1[-1]*k_off_1)*delta_t)
+            membrane_bound_syt3.append(membrane_bound_syt3[-1] + ((1 - membrane_bound_syt3[-1])*k_on_3*Ca_bound_syt3[-1] - membrane_bound_syt3[-1]*k_off_3)*delta_t)
+            membrane_bound_syt7.append(membrane_bound_syt7[-1] + ((1 - membrane_bound_syt7[-1])*k_on_7*Ca_bound_syt7[-1] - membrane_bound_syt7[-1]*k_off_7)*delta_t)
+
+
+        #norm_val = max(max(membrane_bound_syt1), max(membrane_bound_syt3), max(membrane_bound_syt7))
+        self.norm_val = max(max(membrane_bound_syt1), max(membrane_bound_syt7))
+        #norm_val_Ca = max(max(Ca_bound_syt1), max(Ca_bound_syt3), max(Ca_bound_syt7))
+        self.norm_val_Ca = max(max(Ca_bound_syt1), max(Ca_bound_syt7))
+
+class three_sensor_simple(object):
+
+    def __init__(self, stimulus_times, p_base, delta_k_3, delta_p_7, delta_3, delta_7, k_off_3, k_off_7,):
+
+        syt3 = 0
+        syt7 = 0
+
+        n_vesicles = 1
+
+        ts = np.arange(0,max_time+delta_t, delta_t) #simulate from t = 0 to t = max_time (inclusive) with a resolution of delta_t ms
+        Ca_sim = np.zeros(len(ts))
+
+        Ca_sim[:] += Ca_rest
+        for t in stimulus_times:
+            spike_start_index = int(t/delta_t) #index for the Ca_sim vector corresponding to t
+            spike_peak_index = int((t+mu)/delta_t) #index for the Ca_sim vector corresponding to the peak of the spike initiated at t
+
+            Ca_sim[spike_start_index:] += Ca_spike*np.exp(-1*((ts[0:len(ts)-spike_start_index] - mu)/sigma)**2/2)
+            Ca_sim[spike_peak_index:] += Ca_residual*np.exp(-1*ts[0:-1*spike_peak_index]/T_Ca_decay) #when the pulse hits its peak, add in a residual decay component from that point on
+
+class three_sensor_ultra_simple(object):
+
+    def __init__(self, stimulus_times, k_refill_basal, p_base, delta_k_3, delta_p_7, k_on_3, k_on_7, k_off_3, k_off_7, delta_t):
+
+        syt3vec = []
+        syt7vec = []
+        syt3 = 0
+        syt7 = 0
+
+        k_refillvec = []
+
+        n_vesicles = 1
+        n_vesiclesvec = []
+
+        EPSC = []
+
+        ISIs = np.diff(stimulus_times)
+        ISIs = np.append(ISIs, ISIs[0])
+
+        for i in range(len(stimulus_times)):
+
+            EPSC.append(n_vesicles*(p_base + syt7*delta_p_7))
+            n_vesicles -= EPSC[-1]
+
+            syt3 += (1-syt3)*k_on_3 #syt steps up as a result of the pulse by a constant percent of Ca-unbound syt
+            syt7 += (1-syt7)*k_on_7
+
+            ts = np.arange(0, ISIs[i]/delta_t, delta_t)
+            for t in ts:
+
+                k_refill = k_refill_basal + syt3*delta_k_3 #k_refill is greater than k_refill_basal by delta_k_3 when all syt3 are Ca bound
+
+                n_vesicles += (1-n_vesicles)*k_refill*delta_t
+
+                syt3 *= 1-k_off_3*delta_t #Ca bound syt decays with rate constant over delta_t between stimuli
+                syt7 *= 1-k_off_7*delta_t
+
+                #if t%(delta_t*10) == 0:
+                k_refillvec.append(k_refill)
+                n_vesiclesvec.append(n_vesicles)
+                syt3vec.append(syt3)
+                syt7vec.append(syt7)
+
+        self.syt3 = syt3vec
+        self.syt7 = syt7vec
+        self.k_refill = k_refillvec
+        self.vesicles = n_vesiclesvec
+        if sum(ISIs)/delta_t < 1e5:
+            self.ts = np.arange(0, sum(ISIs)/delta_t, delta_t)*delta_t
+        self.EPSC = np.asarray(EPSC)
+        self.norm_val = EPSC[0]
