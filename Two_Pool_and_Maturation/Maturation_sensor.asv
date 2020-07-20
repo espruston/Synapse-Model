@@ -208,7 +208,7 @@ function dydt = vectorized(t,state,Ca_sim,Ca_dependence_matrix,Ca_independent_ma
     rate_matrix = Ca*Ca_dependence_matrix + Ca_independent_matrix;
     rate_matrix = rate_matrix - sum(rate_matrix).*I;
     
-    dydt = rate_matrix*state; %runs slower if rate_matrix is set to sparse(rate_matrix)
+    dydt = rate_matrix*state; %TODO: test speed of this line with rate_matrix as sparse
 end
 
 
