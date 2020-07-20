@@ -32,7 +32,7 @@ mu = 2*FWHM; %time at which Ca_spike is maximal (ms)
 ts = linspace(0,max_time,max_time/delta_t + 1);
 I = eye(21);
 
-new_params = 0; %set to one when testing new parameters to enable calculation of steady state
+new_params = 1; %set to one when testing new parameters to enable calculation of steady state
 
 if new_params == 1
     %values for simulation of steady state
@@ -45,8 +45,9 @@ if new_params == 1
     k = [k_refill;k_mature;k_unmature;k_prime;k_unprime;k_on;k_off;b;f;M_plus;P_plus]; 
     writematrix(k,filename,'Sheet',2,'Range','B48'); %pass parameter values for calculation of the rate matrix
 
-    M = readmatrix(filename,'Sheet',2,'Range','B2:V22','UseExcel',1); %useexcel must be true for calculation to be made within the spreadsheet
-
+    Ca_independent_matrix = readmatrix(filename,'Sheet',2,'Range','B2:V22','UseExcel',1); %useexcel must be true for calculation to be made within the spreadsheet
+    Ca_dependence_matrix = readmatrix(filename,'Sheet',2,'Range','B25:V45','UseExcel',1);
+    
     %these matricies are sparse due to relatively low connectivity between states
     Ca_independent_matrix = triu(M); %upper triangular is Ca independent by design
     Ca_dependence_matrix = tril(M); %should be lower triangular by design
@@ -208,7 +209,7 @@ function dydt = vectorized(t,state,Ca_sim,Ca_dependence_matrix,Ca_independent_ma
     rate_matrix = Ca*Ca_dependence_matrix + Ca_independent_matrix;
     rate_matrix = rate_matrix - sum(rate_matrix).*I;
     
-    dydt = rate_matrix*state; %TODO: test speed of this line with rate_matrix as sparse
+    dydt = rate_matrix*state; %runs slower if rate_matrix is set to sparse(rate_matrix)
 end
 
 

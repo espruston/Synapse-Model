@@ -3,6 +3,7 @@
 
 k_refill = 0; %vesicles ms-1
 
+k_mature_basal = 2; % basal rate of vesicle maturation, ms-1
 k_mature = 3e5; % syt3, M-1ms-1, Hui
 k_unmature = .378; %ms-1, Hui
 
@@ -19,11 +20,12 @@ f = 28;
 Ca_rest = 5e-8;
 Ca_spike = 2.5e-5;
 Ca_residual = 250e-9;
-T_Ca_decay = 40;
-
+T_Ca_decay = 40; %ms
+ 
 delta_t = 1e-2;
 max_time = 500;
 stimulus_times = [0 20 40 60 80 100 120 140 160 180];
+%stimulus_times = [0];
 
 FWHM = .34; %Local calcium full width half maximum ms
 sigma = FWHM/2.35; %variance
@@ -32,7 +34,7 @@ mu = 2*FWHM; %time at which Ca_spike is maximal (ms)
 ts = linspace(0,max_time,max_time/delta_t + 1);
 I = eye(21);
 
-new_params = 0; %set to one when testing new parameters to enable calculation of steady state
+new_params = 1; %set to one when testing new parameters to enable calculation of steady state
 
 if new_params == 1
     %values for simulation of steady state
@@ -42,14 +44,15 @@ if new_params == 1
     P_plus = 0;
 
     filename = 'rate_matrix_Maturation_sensor.xlsx'; %file containing rate and calcium dependence matricies
-    k = [k_refill;k_mature;k_unmature;k_prime;k_unprime;k_on;k_off;b;f;M_plus;P_plus]; 
+    k = [k_refill;k_mature_basal;k_mature;k_unmature;k_prime;k_unprime;k_on;k_off;b;f;M_plus;P_plus]; 
     writematrix(k,filename,'Sheet',2,'Range','B48'); %pass parameter values for calculation of the rate matrix
 
-    M = readmatrix(filename,'Sheet',2,'Range','B2:V22','UseExcel',1); %useexcel must be true for calculation to be made within the spreadsheet
-
-    %these matricies are sparse due to relatively low connectivity between states
-    Ca_independent_matrix = triu(M); %upper triangular is Ca independent by design
-    Ca_dependence_matrix = tril(M); %should be lower triangular by design
+    Ca_independent_matrix = readmatrix(filename,'Sheet',2,'Range','B2:V22','UseExcel',1); %useexcel must be true for calculation to be made within the spreadsheet
+    Ca_dependence_matrix = readmatrix(filename,'Sheet',2,'Range','B25:V45','UseExcel',1);
+    
+%     %these matricies are sparse due to relatively low connectivity between states
+%     Ca_independent_matrix = triu(M); %upper triangular by design
+%     Ca_dependence_matrix = tril(M); %should be lower triangular by design
 
     state_0 = zeros(21,1);
     state_0(2) = 1; %start all vesicles in immature state
@@ -77,18 +80,17 @@ if new_params == 1
     %turn on fusion, simulate calcium influx
     %values for simulation of stims
     k_fuse_basal = 3.5e-4;
-    k_refill = 0;
+    %k_refill = 0;
     M_plus = 3.5e-4;
     P_plus = 3.5e-4;
     
     %update rate matrix for non SS solution
-    writematrix(k_refill,filename,'Sheet',2,'Range','B48');
+    %writematrix(k_refill,filename,'Sheet',2,'Range','B48');
     k = [M_plus;P_plus]; 
-    writematrix(k,filename,'Sheet',2,'Range','B57'); %pass parameter values for calculation of the rate matrix
+    writematrix(k,filename,'Sheet',2,'Range','B58'); %pass parameter values for calculation of the rate matrix
 
-    M = readmatrix(filename,'Sheet',2,'Range','B2:V22','UseExcel',1); %useexcel must be true for calculation to be made within the spreadsheet
-    Ca_independent_matrix = triu(M); %Ca independent is upper triangular by design
-    Ca_dependence_matrix = tril(M); %should be lower triangular by design
+    Ca_independent_matrix = readmatrix(filename,'Sheet',2,'Range','B2:V22','UseExcel',1); %useexcel must be true for calculation to be made within the spreadsheet
+    Ca_dependence_matrix = readmatrix(filename,'Sheet',2,'Range','B25:V45','UseExcel',1);
     
     save('SS.mat', 'SS');
     save('Ca_independent.mat', 'Ca_independent_matrix');
