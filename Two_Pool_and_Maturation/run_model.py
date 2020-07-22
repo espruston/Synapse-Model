@@ -53,9 +53,9 @@ if __name__ == "__main__":
     '''dual&three sensor parameters'''
     #K_Ds for Ca binding of syts
     # K_D_1 =
-    K_D_1 = 41e-6 #syt1 K_D for membrane binding, M, Brandt/Knight
-    K_D_3 = 2e-6 #syt3, M, Sugita
-    K_D_7 = 1.5e-6 #syt 7, M, Knight
+    K_D_1 = 41 #syt1 K_D for membrane binding, uM, Brandt/Knight
+    K_D_3 = 2 #syt3, uM, Sugita
+    K_D_7 = 1.5 #syt 7, uM, Knight
 
     K_A_1 = 43e-6 #half max Ca concentration for membrane binding of syt1, M, Knight
     K_A_3 = 0
@@ -63,17 +63,17 @@ if __name__ == "__main__":
     #
     #membrane association constants
     #Ca dependent k_on
-    k_on_1 = 1.63e5 #syt1 M-1ms-1, Knight
+    #k_on_1 = 1.63e5 #syt1 M-1ms-1, Knight
     #k_on_1 = 1.2e7 #Hui
     #k_on_3 = 3e5 #syt3 M-1ms-1, Hui
     #k_on_7 = 7.333e3 #syt7 M-1ms-1, Knight
-    k_on_7 = 2.333e4 #fits skylers model well with syt1 from Knight
+    #k_on_7 = 2.333e4 #fits skylers model well with syt1 from Knight
     #k_on_7 = 3e5 #estimate from likeness to syt3 Hui
     #
     # #Ca indpendent k_on
-    #k_on_1 = .415 #ms-1, Jackman
+    k_on_1 = .340 #ms-1, Jackman
     # k_on_3 = .190 #ms-1, est. from syt 7 vals, Jackman
-    #k_on_7 = .190 #ms-1, Jackman
+    k_on_7 = .157 #ms-1, Jackman
     #
     k_off_1 = .670 #syt1 ms-1, 90% amplitude, major rate, double exponential, Knight
     # #k_off_1 = .378 #Hui
@@ -81,20 +81,20 @@ if __name__ == "__main__":
     k_off_7 = .011 #syt7 ms-1, Knight
     # #k_off_7 = .019*.25 + .008*.75 #Hui, crude approx of the double exponential
     #
-    delta_t = 1e-3 #time resolution, ms
+    delta_t = 1e-1 #time resolution, ms
     max_time = 500 #ms
-    stimulus_times = np.arange(0,200,20)
-
-    Ca_rest = 50e-9 #Resting calcium M, Jackman
-    Ca_residual = 250e-9 #Residual calcium M, Jackman
-    T_Ca_decay = 40 #Residual calcium decay constant s, Jackman
-    Ca_spike = 25e-6 #Local calcium after pulse M, Jackman
+    #stimulus_times = np.arange(0,200,20)
+    stimulus_times = [0,20]
+    Ca_rest = 5e-2 #Resting calcium uM, Jackman
+    Ca_residual = 25e-2 #Residual calcium uM, Jackman
+    T_Ca_decay = 40 #Residual calcium decay constant ms, Jackman
+    Ca_spike = 25 #Local calcium after pulse uM, Jackman
     FWHM = .34 #Local calcium full width half maximum ms
 
     output = Skyler_dual_sensor(K_D_1, K_D_7, k_on_1, k_on_7, k_off_1, k_off_7, Ca_rest, Ca_residual, T_Ca_decay, Ca_spike, FWHM, delta_t, max_time, stimulus_times)
     #output = Evan_dual_sensor(K_A_1, K_A_7, Ca_rest, Ca_residual, T_Ca_decay, Ca_spike, FWHM, delta_t, max_time, stimulus_times)
 
-    stimulus_times = np.arange(0,100,10)
+    #stimulus_times = np.arange(0,100,10)
 
     #output = three_sensor_ultra_simple(stimulus_times, k_refill_basal, p_base, delta_k_3, delta_p_7, k_on_3, k_on_7, k_off_3, k_off_7, delta_t)
     #output = three_sensor_ultra_simple(stimulus_times, 3.5e-6, .8, 5e-7, 0, 0, 0, .00001, .0019, 1e-2)
@@ -103,42 +103,64 @@ if __name__ == "__main__":
     #plt.plot(output.ts, output.syt3, label = "syt3")
     #plt.plot(output.ts, output.syt7, label = "syt7")
     #plt.plot(output.ts, output.vesicles)
-    plt.ylabel("ESPSC norm")
-    plt.xlabel("Time (ms)")
-    plt.xlim(0,stimulus_times[-1]+100)
-    plt.ylim(0,1.2)
+    # plt.ylabel("ESPSC norm")
+    # plt.xlabel("Time (ms)")
+    # plt.xlim(0,stimulus_times[-1]+100)
+    # plt.ylim(0,1.2)
     #plt.legend()
 
-    #plt.plot(output.ts, output.Ca)
-    # plt.ylabel("Ca concentration (M)")
-    # plt.xlabel("time (ms)")
-    # plt.title("Simulated presynaptic Ca for 50hz PPR")
-    #
-    # #plt.xlim(-10,max_time)
-    # #plt.yscale('log')
+    plt.plot(output.ts, output.Ca)
+    plt.ylabel("Ca concentration (uM)")
+    plt.xlabel("time (ms)")
+    plt.title("Simulated presynaptic Ca for 50hz PPR")
 
-    plt.show()
+    plt.xlim(-10,max_time)
+    plt.yscale('log')
+
+    #plt.show()
     #
-    #plt.plot(output.ts, output.syt1/output.norm_val, label = "Membrane bound Syt 1")
-    #plt.plot(output.ts, output.syt7/output.norm_val, label = "Membrane bound Syt 7")
-    #plt.plot(ts, membrane_bound_syt3[1:]/norm_val, label = "Membrane bound Syt 3")
+    # plt.plot(output.ts, output.syt1/output.norm_val, label = "Membrane bound Syt 1")
+    # plt.plot(output.ts, output.syt7/output.norm_val, label = "Membrane bound Syt 7")
     # plt.ylabel("Bound isoform (norm.)")
     # plt.xlabel("time (ms)")
     # plt.title("Simulated SYT membrane binding (single pulse)")
     # plt.xlim(0,max_time)
     # plt.ylim(0,1)
 
-    #plt.plot(output.ts, output.syt1Ca[1:]/output.norm_val_Ca, label = "Membrane bound Syt 1")
-    # #plt.plot(ts, membrane_bound_syt3[1:]/norm_val, label = "Membrane bound Syt 3")
-    #plt.plot(output.ts, output.syt7Ca[1:]/output.norm_val_Ca, label = "Membrane bound Syt 7")
+    #For Evan_dual_sensor
+    # plt.plot(output.ts, output.syt1, label = "Membrane bound Syt 1")
+    # plt.plot(output.ts, output.syt7, label = "Membrane bound Syt 7")
     # plt.ylabel("Bound isoform (norm.)")
     # plt.xlabel("time (ms)")
     # plt.title("Simulated SYT membrane binding (single pulse)")
     # plt.xlim(0,max_time)
+    # plt.ylim(0,1)
 
-    # plt.legend()
+    #For Skyler_dual_sensor
+    #PPR plot
+    # t0 = int(1000/delta_t)
+    # syt17 = np.asarray(output.syt1[1:])*np.asarray(output.syt7[1:])
+    # syt17 /= max(syt17[t0:t0+int(20/delta_t)])
+    # plt.plot(output.ts, syt17)
+    # plt.ylabel("Syt1*Syt7 (norm)")
+    # plt.xlabel("time (ms)")
+    # plt.title("Simulated multiplicative membrane binding PPR")
+    # plt.xlim(-10,max_time)
+
+    #plt.plot(output.ts, output.syt1[1:]/max(output.syt1), label = "Membrane bound Syt 1")
+    #plt.plot(output.ts, output.syt7[1:]/max(output.syt7), label = "Membrane bound Syt 7")
+    #plt.plot(output.ts, output.syt1[1:], label = "Membrane bound Syt 1") #only normalize syt1 ???
+    #plt.plot(output.ts, output.syt7[1:], label = "Membrane bound Syt 7")
+    #plt.plot(output.ts, output.syt1Ca[1:]/output.norm_val_Ca, label = "Ca bound Syt 1")
+    #plt.plot(output.ts, output.syt7Ca[1:]/output.norm_val_Ca, label = "Ca bound Syt 7")
+    # plt.ylabel("Bound isoform (norm.)")
+    # plt.xlabel("time (ms)")
+    # plt.title("Simulated SYT membrane binding (single pulse)")
+    # plt.xlim(-10,max_time)
+
+    #plt.legend()
     #
-    # plt.show()
+    plt.show()
 
     '''usage'''
 
