@@ -81,7 +81,7 @@ if __name__ == "__main__":
     k_off_7 = .011 #syt7 ms-1, Knight
     # #k_off_7 = .019*.25 + .008*.75 #Hui, crude approx of the double exponential
     #
-    delta_t = 1e-1 #time resolution, ms
+    delta_t = 1e-3 #time resolution, ms
     max_time = 500 #ms
     #stimulus_times = np.arange(0,200,20)
     stimulus_times = [0]
