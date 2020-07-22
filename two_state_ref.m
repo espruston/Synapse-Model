@@ -7,6 +7,7 @@ rate_mat = [0, k_BA; k_AB, 0];
 
 rate_mat = rate_mat + -1*eye(2).*sum(rate_mat); %create rate matrix where the on diagonal components are equal to -1 times the sum of all outward rate constants for A
 
+%this method extends to an infinite # of states where rate_mat_i,j = k_ij
 
 ICs = [10; 20]; %initial conditions, [A; B]
 time_interval = [0,100];

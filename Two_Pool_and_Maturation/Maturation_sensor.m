@@ -3,12 +3,15 @@
 
 k_refill = 0; %vesicles ms-1
 
-k_mature_basal = 2; % basal rate of vesicle maturation, ms-1
-k_mature = 3e5; % syt3, M-1ms-1, Hui
+k_mature_basal = 1e2; % basal rate of vesicle maturation, ms-1
+k_mature = 1e4; % syt3, M-1ms-1, estimated from Miki et al
 k_unmature = .378; %ms-1, Hui
 
-k_prime = 7.33e3; % syt7, M-1ms-1, Knight
-k_unprime = .011; %ms-1
+% k_prime = 7.33e3; % syt7, M-1ms-1, Knight
+% k_unprime = .011; %ms-1
+%no syt7 (CF)
+k_prime = 0;
+k_unprime = 0; 
 
 k_on = 1.4e5; %ca binding rate, syt1, M-1ms-1
 k_off = 4; %ca unbinding rate, syt1, ms-1 
@@ -32,13 +35,12 @@ sigma = FWHM/2.35; %variance
 mu = 2*FWHM; %time at which Ca_spike is maximal (ms)
 
 ts = linspace(0,max_time,max_time/delta_t + 1);
-I = eye(21);
 
 new_params = 1; %set to one when testing new parameters to enable calculation of steady state
 
 if new_params == 1
     %values for simulation of steady state
-    k_fuse_basal = 0;
+    %k_fuse_basal = 0;
     k_refill = 0;
     M_plus = 0;
     P_plus = 0;
@@ -59,7 +61,7 @@ if new_params == 1
 
     %create rate matrix for steady state determination
     rate_matrix = Ca_rest*Ca_dependence_matrix + Ca_independent_matrix;
-    rate_matrix = rate_matrix - sum(rate_matrix).*I;
+    rate_matrix = rate_matrix - diag(sum(rate_matrix));
 
     %solution to ODEs for steady state determination, this should always be run
     %first when testing a new set of parameters
@@ -119,7 +121,7 @@ for t = 1:length(stimulus_times) %simulate calcium influx
 end
 
 %solution to ODEs for stimuli
-[t,sol] = ode45(@(t,sol) vectorized(t,sol,Ca_sim,Ca_dependence_matrix,Ca_independent_matrix,I,delta_t), ts, SS);
+[t,sol] = ode45(@(t,sol) vectorized(t,sol,Ca_sim,Ca_dependence_matrix,Ca_independent_matrix,delta_t), ts, SS);
 
 %define each 'type' of vesicle for plotting, summation occurs along axis 2
 Immature = sol(:,2);
@@ -203,12 +205,12 @@ function dydt = SSvectorized(t,state,rate_matrix)
     dydt = rate_matrix*state;
 end
 
-function dydt = vectorized(t,state,Ca_sim,Ca_dependence_matrix,Ca_independent_matrix,I,delta_t)
+function dydt = vectorized(t,state,Ca_sim,Ca_dependence_matrix,Ca_independent_matrix,delta_t)
 
     Ca = Ca_sim(round(t)/delta_t+1); 
 
     rate_matrix = Ca*Ca_dependence_matrix + Ca_independent_matrix;
-    rate_matrix = rate_matrix - sum(rate_matrix).*I;
+    rate_matrix = rate_matrix - diag(sum(rate_matrix));
     
     dydt = rate_matrix*state; %runs slower if rate_matrix is set to sparse(rate_matrix)
 end
