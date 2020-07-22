@@ -92,7 +92,6 @@ if __name__ == "__main__":
     FWHM = .34 #Local calcium full width half maximum ms
 
     output = Skyler_dual_sensor(K_D_1, K_D_7, k_on_1, k_on_7, k_off_1, k_off_7, Ca_rest, Ca_residual, T_Ca_decay, Ca_spike, FWHM, delta_t, max_time, stimulus_times)
-    #output = Evan_dual_sensor(K_A_1, K_A_7, Ca_rest, Ca_residual, T_Ca_decay, Ca_spike, FWHM, delta_t, max_time, stimulus_times)
 
     #stimulus_times = np.arange(0,100,10)
 
@@ -121,15 +120,6 @@ if __name__ == "__main__":
     #
     # plt.plot(output.ts, output.syt1/output.norm_val, label = "Membrane bound Syt 1")
     # plt.plot(output.ts, output.syt7/output.norm_val, label = "Membrane bound Syt 7")
-    # plt.ylabel("Bound isoform (norm.)")
-    # plt.xlabel("time (ms)")
-    # plt.title("Simulated SYT membrane binding (single pulse)")
-    # plt.xlim(0,max_time)
-    # plt.ylim(0,1)
-
-    #For Evan_dual_sensor
-    # plt.plot(output.ts, output.syt1, label = "Membrane bound Syt 1")
-    # plt.plot(output.ts, output.syt7, label = "Membrane bound Syt 7")
     # plt.ylabel("Bound isoform (norm.)")
     # plt.xlabel("time (ms)")
     # plt.title("Simulated SYT membrane binding (single pulse)")
