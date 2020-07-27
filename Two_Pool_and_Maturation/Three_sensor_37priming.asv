@@ -30,16 +30,21 @@ k_off_7 = 1.1e-2;
 L_plus = 3.5e-7; %ms^-1
 O = 27.978;
 T = 1; %no effect of syt3 on release
-S = 1311; %est from Arrhenius
+%S = 1311; %est from Arrhenius
 %S = 510.26; %best fit from Kobbersmed
-%S = 1; %no effect of syt7 on release
+S = 1; %no effect of syt7 on release
 b1 = .5;
 b3 = .5;
 b7 = .5;
 k_refill = 0.001;
-CDR = 30;
+%CDR = 30;
+CDR = 1;
+k_unprime = 0.002;
+K_A_prime = 1.7e-6; %Knight Ca1/2 syt7
+k_prime = 0.2;
+K_A_unprime = 7e-6; %Hui Ca1/2 syt3
 
-
+syts = 37; %choose which syts you want to use, valid inputs [3, 7, 37]
 new_params = 1; %set to one when testing new parameters to enable calculation of steady state
 
 if new_params == 1
@@ -51,27 +56,33 @@ if new_params == 1
 %     writematrix(k_refill,filename,'Range','B81');
 %     writematrix(L_plus,filename,'Range','B74');
     
-    Ca_ind = readmatrix(filename,'Sheet',1,'Range','B2:BM65','UseExcel',1); %useexcel must be true for calculation to be made within the spreadsheet
-    Ca_dep = readmatrix(filename,'Sheet',1,'Range','BO2:DZ65','UseExcel',1);
+    Ca_ind = readmatrix(filename,'Sheet',3,'Range','B2:I9','UseExcel',1); %useexcel must be true for calculation to be made within the spreadsheet
+    Ca_dep = readmatrix(filename,'Sheet',3,'Range','L2:S9','UseExcel',1);
 
-    state_0 = zeros(64,1);
-    state_0(1) = 1; %start with all sites in e00 state
+    state_0 = zeros(8,1);
+    state_0(2) = 1; %start with all sites in empty state
 
     %create rate matrix for steady state determination
     rate_matrix = Ca_rest*Ca_dep + Ca_ind;
-    rate_matrix = rate_matrix - diag(sum(rate_matrix(1:end-1,:)));
+    
+    r = 1-Ca_rest^2/(Ca_rest^2 + K_A_prime^2);
+    rate_matrix(2,3) = r*k_unprime;
+    u = 1-Ca_rest^2/(Ca_rest^2 + K_A_unprime^2);
+    rate_matrix(3,2) = u*k_prime;
+    
+    rate_matrix = rate_matrix - diag(sum(rate_matrix));
 
     %solution to ODEs for steady state determination, this should always be run
     %first when testing a new set of parameters
     [t0,state] = ode23s(@(t,state) SSvectorized(t,state,rate_matrix), ts, state_0);
     SS = state(end,:);
-    SS(end) = 0;
+    SS(1) = 0;
     save('SS.mat','SS');
     
     %writematrix(L_plus,filename,'Sheet',1,'Range','B74');
     
-    Ca_ind = readmatrix(filename,'Sheet',1,'Range','B2:BM65','UseExcel',1); %useexcel must be true for calculation to be made within the spreadsheet
-    Ca_dep = readmatrix(filename,'Sheet',1,'Range','BO2:DZ65','UseExcel',1);
+    Ca_ind = readmatrix(filename,'Sheet',3,'Range','B2:I9','UseExcel',1); %useexcel must be true for calculation to be made within the spreadsheet
+    Ca_dep = readmatrix(filename,'Sheet',3,'Range','L2:S9','UseExcel',1);
     
     save('SS.mat', 'SS');
     save('Ca_ind.mat', 'Ca_ind');
@@ -100,9 +111,34 @@ for t = 1:length(stimulus_times) %simulate calcium influx
 end
 
 %solution to ODEs for stimuli
-[t,sol] = ode15s(@(t,sol) vectorized(t,sol,Ca_sim,Ca_dep,Ca_ind,delta_t), ts, SS);
 
-Fused = sol(:,64);
+syt_selections = [3 7 37];
+        
+if sum(syt_selections == syts) ~= 1
+    select = menu('Which syts would you like to use?',3,7,37);
+    syts = syt_selections(select);
+end
+
+switch syts
+    
+    case 37
+        %syt3 and 7
+        [t,sol] = ode15s(@(t,sol) vectorized37(t,sol,Ca_sim,Ca_dep,Ca_ind,k_unprime,K_A_prime,k_prime,K_A_unprime,delta_t), ts, SS);
+    
+    case 3
+        %syt3
+        [t,sol] = ode15s(@(t,sol) vectorized3(t,sol,Ca_sim,Ca_dep,Ca_ind,k_unprime,k_prime,K_A_unprime,delta_t), ts, SS);
+    
+    case 7
+        %syt7
+        [t,sol] = ode15s(@(t,sol) vectorized7(t,sol,Ca_sim,Ca_dep,Ca_ind,k_unprime,K_A_prime,k_prime,delta_t), ts, SS);
+    
+    otherwise
+        disp('ERROR')
+        
+end
+
+Fused = sol(:,1);
 y = exp(-1*ts/.1)-exp(-1*ts/2);
 dFused = [0; diff(Fused)];
 EPSC_sim = zeros(1,length(dFused));
@@ -120,14 +156,44 @@ xlim([-10 max_time])
 
 function dydt = SSvectorized(t,state,rate_matrix)
     dydt = rate_matrix*state;
+    dydt(2) = dydt(2) + dydt(1);
 end
 
-function dydt = vectorized(t,state,Ca_sim,Ca_dep,Ca_ind,delta_t)
+function dydt = vectorized37(t,state,Ca_sim,Ca_dep,Ca_ind,k_unprime,K_A_prime,k_prime,K_A_unprime,delta_t)
 
     Ca = Ca_sim(round(t/delta_t)+1); 
 
     rate_matrix = Ca*Ca_dep + Ca_ind;
-    rate_matrix = rate_matrix - diag(sum(rate_matrix(1:end-1,:)));
+    rate_matrix(2,3) = (1-Ca^2/(Ca^2 + K_A_prime^2))*k_unprime; %inhibition of 
+    rate_matrix(3,2) = (1-Ca^2/(Ca^2 + K_A_unprime^2))*k_prime;
+    rate_matrix = rate_matrix - diag(sum(rate_matrix));
     
     dydt = rate_matrix*state; %runs slower if rate_matrix is set to sparse(rate_matrix)
+    dydt(2) = dydt(2) + dydt(1);
+end
+
+function dydt = vectorized3(t,state,Ca_sim,Ca_dep,Ca_ind,k_unprime,k_prime,K_A_unprime,delta_t)
+
+    Ca = Ca_sim(round(t/delta_t)+1); 
+
+    rate_matrix = Ca*Ca_dep + Ca_ind;
+    rate_matrix(2,3) = k_unprime; %no syt7 effect
+    rate_matrix(3,2) = (1-Ca^2/(Ca^2 + K_A_unprime^2))*k_prime;
+    rate_matrix = rate_matrix - diag(sum(rate_matrix));
+    
+    dydt = rate_matrix*state; %runs slower if rate_matrix is set to sparse(rate_matrix)
+    dydt(2) = dydt(2) + dydt(1);
+end
+
+function dydt = vectorized7(t,state,Ca_sim,Ca_dep,Ca_ind,k_unprime,k_prime,K_A_prime,delta_t)
+
+    Ca = Ca_sim(round(t/delta_t)+1); 
+
+    rate_matrix = Ca*Ca_dep + Ca_ind;
+    rate_matrix(2,3) = (1-Ca^2/(Ca^2 + K_A_prime^2))*k_unprime; 
+    rate_matrix(3,2) = k_prime; %no syt3 effect
+    rate_matrix = rate_matrix - diag(sum(rate_matrix));
+    
+    dydt = rate_matrix*state; %runs slower if rate_matrix is set to sparse(rate_matrix)
+    dydt(2) = dydt(2) + dydt(1);
 end
