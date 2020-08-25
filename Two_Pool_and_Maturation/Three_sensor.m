@@ -1,15 +1,19 @@
 Ca_rest = 5e-8;
-Ca_spike = 1.5e-5;
+Ca_spike = 2e-5;
 Ca_residual = 250e-9;
 T_Ca_decay = 40; %ms
  
 delta_t = 1e-2;
-%stimulus_times = linspace(0,500*10,10);
-%stimulus_times = [0 50 100 150 200 250 300 350 400 450];
+%stimulus_times = linspace(0,1000*19,20); %20 stims @1hz SLOW
+%stimulus_times = linspace(0,100*19,20); %20 stims @10hz
+%stimulus_times = linspace(0,50*19,20); %20 stims @20hz
+stimulus_times = linspace(0,20*19,20); %20 stims @50hz
+%stimulus_times = linspace(0,10*99,100); %100 stims @100hz
 %stimulus_times = [0 20 40 60 80 100 120 140 160 180];
-stimulus_times = [0 10];
+%stimulus_times = [0 10]; %10ms ISI PPR
+%stimulus_times = [0 20]; %20ms ISI PPR
 %stimulus_times = [0];
-max_time = stimulus_times(end)+300;
+max_time = stimulus_times(end)+3*stimulus_times(2);
 
 FWHM = .34; %Local calcium full width half maximum ms
 sigma = FWHM/2.35; %variance
@@ -17,12 +21,13 @@ mu = 2*FWHM; %time at which Ca_spike is maximal (ms)
 
 ts = linspace(0,max_time,max_time/delta_t + 1);
 
-k_on_1 = 1.4e5; %M^-1ms^-1 Kobbersmed
-k_on_3 = 3e5; %Hui
-%k_on_3 = 0; %syt3 KO
-k_on_7 = 7.333e3; %Knight
+%k_on_1 = 1.4e5; %M^-1ms^-1 Kobbersmed
+k_on_1 = 5.5e5;
+%k_on_3 = 3e5; %Hui
+k_on_3 = 0; %syt3 KO
+%k_on_7 = 7.333e3; %Knight
 %k_on_7 = 4.1e4;
-%k_on_7 = 0; %syt7 KO
+k_on_7 = 0; %syt7 KO
 k_off_1 = 4; %Kobbersmed
 k_off_3 = 1.5; %kobbersmed/Sugita
 k_off_7 = 1.1e-2;
@@ -30,22 +35,27 @@ k_off_7 = 1.1e-2;
 L_plus = 3.5e-7; %ms^-1
 O = 27.978;
 T = 1; %no effect of syt3 on release
-S = 1311; %est from Arrhenius
+%S = 1311; %est from Arrhenius
 %S = 510.26; %best fit from Kobbersmed
-%S = 1; %no effect of syt7 on release
+S = 1; %no effect of syt7 on release
 b1 = .5;
 b3 = .5;
 b7 = .5;
-k_refill = 0.001;
-CDR = 30;
 
+CDR = 1;
+CDI = 1;
+
+%CF Values
+k_refill_net = .0029; %from skt3KO PPR~=63%recovery
+k_refill = .0029;
+k_unfill = k_refill - k_refill_net;
 
 new_params = 1; %set to one when testing new parameters to enable calculation of steady state
 
 if new_params == 1
     
     filename = 'Three_sensor.xlsx'; %file containing rate and calcium dependence matricies
-    k = [k_on_1; k_on_3; k_on_7; k_off_1; k_off_3; k_off_7; L_plus; O; T; S; b1; b3; b7; k_refill; CDR]; 
+    k = [k_on_1; k_on_3; k_on_7; k_off_1; k_off_3; k_off_7; L_plus; O; T; S; b1; b3; b7; k_refill; k_unfill; CDR; CDI]; 
     writematrix(k,filename,'Sheet',1,'Range','B68'); %pass parameter values for calculation of the rate matrix
     
 %     writematrix(k_refill,filename,'Range','B81');
@@ -59,11 +69,11 @@ if new_params == 1
 
     %create rate matrix for steady state determination
     rate_matrix = Ca_rest*Ca_dep + Ca_ind;
-    rate_matrix = rate_matrix - diag(sum(rate_matrix(1:end-1,:)));
+    rate_matrix = rate_matrix - diag(sum(rate_matrix));
 
     %solution to ODEs for steady state determination, this should always be run
     %first when testing a new set of parameters
-    [t0,state] = ode23s(@(t,state) SSvectorized(t,state,rate_matrix), ts, state_0);
+    [t0,state] = ode15s(@(t,state) SSvectorized(t,state,rate_matrix), [0 100000], state_0);
     SS = state(end,:);
     SS(end) = 0;
     save('SS.mat','SS');
@@ -112,6 +122,7 @@ EPSC_sim(i:end) = EPSC_sim(i:end) + y(1:end-i+1)*dFused(i);
 end
 EPSC_sim = -1*EPSC_sim/min(EPSC_sim(1:(stimulus_times(1)+2)/delta_t)); %normalize to the first EPSC under the assumption that the peak occurs within 2ms of the stimulus
 
+figure
 plot([-10 ts], [0 EPSC_sim])
 xlim([-10 max_time])
 
@@ -120,6 +131,7 @@ xlim([-10 max_time])
 
 function dydt = SSvectorized(t,state,rate_matrix)
     dydt = rate_matrix*state;
+    dydt(1) = dydt(1) + dydt(end); %all fused vesicles become empty sites
 end
 
 function dydt = vectorized(t,state,Ca_sim,Ca_dep,Ca_ind,delta_t)
@@ -127,7 +139,8 @@ function dydt = vectorized(t,state,Ca_sim,Ca_dep,Ca_ind,delta_t)
     Ca = Ca_sim(round(t/delta_t)+1); 
 
     rate_matrix = Ca*Ca_dep + Ca_ind;
-    rate_matrix = rate_matrix - diag(sum(rate_matrix(1:end-1,:)));
+    rate_matrix = rate_matrix - diag(sum(rate_matrix));
     
     dydt = rate_matrix*state; %runs slower if rate_matrix is set to sparse(rate_matrix)
+    dydt(1) = dydt(1) + dydt(end); %all fused vesicles become empty sites
 end

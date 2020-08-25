@@ -54,12 +54,12 @@ if __name__ == "__main__":
     #K_Ds for Ca binding of syts
     # K_D_1 =
     K_D_1 = 41 #syt1 K_D for membrane binding, uM, Brandt/Knight
-    K_D_3 = 2 #syt3, uM, Sugita
+    K_D_3 = 5 #syt3, uM, Sugita
     K_D_7 = 1.5 #syt 7, uM, Knight
 
-    K_A_1 = 43e-6 #half max Ca concentration for membrane binding of syt1, M, Knight
+    K_A_1 = 31e-6 #half max Ca concentration for membrane binding of syt1, M, Knight
     K_A_3 = 0
-    K_A_7 = 5.4e-6 #syt7, M, Knight
+    K_A_7 = 1.7e-6 #syt7, M, Knight
     #
     #membrane association constants
     #Ca dependent k_on
@@ -81,10 +81,10 @@ if __name__ == "__main__":
     k_off_7 = .011 #syt7 ms-1, Knight
     # #k_off_7 = .019*.25 + .008*.75 #Hui, crude approx of the double exponential
     #
-    delta_t = 1e-3 #time resolution, ms
+    delta_t = 1e-2 #time resolution, ms
     max_time = 500 #ms
     #stimulus_times = np.arange(0,200,20)
-    stimulus_times = [0]
+    stimulus_times = [0,10]
     Ca_rest = 5e-2 #Resting calcium uM, Jackman
     Ca_residual = 25e-2 #Residual calcium uM, Jackman
     T_Ca_decay = 40 #Residual calcium decay constant ms, Jackman
@@ -93,20 +93,14 @@ if __name__ == "__main__":
 
     #output = Skyler_dual_sensor(K_D_1, K_D_7, k_on_1, k_on_7, k_off_1, k_off_7, Ca_rest, Ca_residual, T_Ca_decay, Ca_spike, FWHM, delta_t, max_time, stimulus_times)
 
-    output = three_sensor(K_D_1, K_D_3, K_D_7, k_on_1, k_on_3, k_on_7, k_off_1, k_off_3, k_off_7, Ca_rest, Ca_residual, T_Ca_decay, Ca_spike, FWHM, delta_t, max_time, stimulus_times)
+    #output = three_sensor(K_D_1, K_D_3, K_D_7, k_on_1, k_on_3, k_on_7, k_off_1, k_off_3, k_off_7, Ca_rest, Ca_residual, T_Ca_decay, Ca_spike, FWHM, delta_t, max_time, stimulus_times)
 
-    #output = three_sensor_ultra_simple(stimulus_times, k_refill_basal, p_base, delta_k_3, delta_p_7, k_on_3, k_on_7, k_off_3, k_off_7, delta_t)
-    #output = three_sensor_ultra_simple(stimulus_times, 3.5e-6, .8, 5e-7, 0, 0, 0, .00001, .0019, 1e-2)
-    #print(output.EPSC[-1])
-    #plt.plot(stimulus_times, output.EPSC/output.norm_val, 'bo')
-    #plt.plot(output.ts, output.syt3, label = "syt3")
-    #plt.plot(output.ts, output.syt7, label = "syt7")
-    #plt.plot(output.ts, output.vesicles)
-    # plt.ylabel("ESPSC norm")
-    # plt.xlabel("Time (ms)")
-    # plt.xlim(0,stimulus_times[-1]+100)
-    # plt.ylim(0,1.2)
-    #plt.legend()
+    size_1 = .32
+    size_2 = 1 - size_1
+    k_1_basal = .09
+    k_2_basal = .2
+
+    output = two_pool_three_sensor(size_1, size_2, k_1_basal, k_2_basal, K_D_1, K_D_3, K_D_7, k_on_1, k_on_3, k_on_7, k_off_1, k_off_3, k_off_7, Ca_rest, Ca_residual, T_Ca_decay, Ca_spike, FWHM, delta_t, max_time, stimulus_times)
 
     # plt.plot(output.ts, output.Ca)
     # plt.ylabel("Ca concentration (uM)")
@@ -119,39 +113,65 @@ if __name__ == "__main__":
     #plt.show()
 
     #For three_sensor
-    plt.plot(output.ts, output.syt1, label = "Membrane bound Syt 1")
-    plt.plot(output.ts, output.syt3, label = "Membrane bound Syt 3")
-    plt.plot(output.ts, output.syt7, label = "Membrane bound Syt 7")
-    plt.ylabel("Bound isoform")
-    plt.xlabel("time (ms)")
-    plt.title("Simulated SYT membrane binding (single pulse)")
-    plt.xlim(-10,max_time)
-    plt.ylim(0,1)
+    # plt.plot(output.ts, output.syt1, label = "Membrane bound Syt 1")
+    # plt.plot(output.ts, output.syt3, label = "Membrane bound Syt 3")
+    # plt.plot(output.ts, output.syt7, label = "Membrane bound Syt 7")
+    # plt.ylabel("Bound isoform")
+    # plt.xlabel("time (ms)")
+    # plt.title("Simulated SYT membrane binding (single pulse)")
+    # plt.xlim(-10,max_time)
+    # plt.ylim(0,1)
 
     #For Skyler_dual_sensor
+
+    #plt.plot(output.ts, np.exp(-40 + output.syt1*20 + output.syt7*2)*delta_t)
     #PPR plot
-    # t0 = int(1000/delta_t)
-    # syt17 = np.asarray(output.syt1)*np.asarray(output.syt7)
-    # syt17 /= max(syt17[t0:t0+int(20/delta_t)])
-    # plt.plot(output.ts, syt17)
+    # plt.plot(output.ts, output.syt17)
     # plt.ylabel("Syt1*Syt7 (norm)")
     # plt.xlabel("time (ms)")
     # plt.title("Simulated multiplicative membrane binding PPR")
     # plt.xlim(-10,max_time)
 
+    # plt.plot(output.ts, output.Fused)
+    # plt.plot(output.ts, output.dFused)
     # plt.plot(output.ts, output.syt1/max(output.syt1), label = "Membrane bound Syt 1")
     # #plt.plot(output.ts, output.syt7/max(output.syt7), label = "Membrane bound Syt 7")
     # #plt.plot(output.ts, output.syt1, label = "Membrane bound Syt 1") #only normalize syt1 ???
     # plt.plot(output.ts, output.syt7, label = "Membrane bound Syt 7")
     # #plt.plot(output.ts, output.syt1Ca, label = "Ca bound Syt 1")
-    # #plt.plot(output.ts, output.syt7Ca, label = "Ca bound Syt 7")
+    # # #plt.plot(output.ts, output.syt7Ca, label = "Ca bound Syt 7")
     # plt.ylabel("Bound isoform (norm.)")
     # plt.xlabel("time (ms)")
-    # plt.title("Simulated SYT membrane binding (single pulse)")
+    # plt.title("Simulated membrane fusion (single pulse)")
     # plt.xlim(-10,max_time)
     #
-    plt.legend()
+    # plt.legend()
     # #
+
+    #For two_pool_three_sensor
+    # plt.plot(output.ts, output.Ca_res+output.Ca_local, label = 'Total Ca signal')
+    # plt.plot(output.ts, output.Ca_res, label = 'Residual Ca signal')
+    # plt.plot(output.ts, output.Ca_local, label = 'Local Ca signal')
+    #
+    # plt.ylabel("Ca concentration (uM)")
+    # plt.xlabel("time (ms)")
+    # plt.title("Simulated presynaptic Ca")
+    #
+    # plt.xlim(-10,max_time)
+    # plt.yscale('log')
+
+    # plt.plot(output.ts, output.syt1, label = "Membrane bound Syt 1")
+    # plt.plot(output.ts, output.syt3, label = "Membrane bound Syt 3")
+    # plt.plot(output.ts, output.syt7_1, label = "Membrane bound Syt 7 (pool 1)")
+    # plt.plot(output.ts, output.syt7_2, label = "Membrane bound Syt 7 (pool 2)")
+
+    plt.plot(output.ts, output.dFused_1, label = 'dFused_1')
+    plt.plot(output.ts, output.dFused_2, label = 'dFused_2')
+    plt.plot(output.ts, output.dFused_1+output.dFused_2, label = 'dFused_tot')
+    plt.xlim(-10,max_time)
+    #
+    plt.legend()
+
     plt.show()
 
     '''usage'''

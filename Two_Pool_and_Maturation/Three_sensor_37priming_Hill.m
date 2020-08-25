@@ -39,12 +39,13 @@ b7 = .5;
 k_refill = 0.001;
 %CDR = 30;
 CDR = 1;
-k_unprime = 0.002;
-K_A_prime = 1.7e-6; %Knight Ca1/2 syt7
-k_prime = 0.2;
+k_unprime = .2;
+%K_A_prime = 1.7e-6; %Knight Ca1/2 syt7
+K_A_prime = 55e-9; %Kobbersmed fits
+k_prime = 0.002;
 K_A_unprime = 7e-6; %Hui Ca1/2 syt3
 
-syts = 37; %choose which syts you want to use, valid inputs [3, 7, 37]
+syts = 3; %choose which syts you want to use, valid inputs [3, 7, 37]
 new_params = 1; %set to one when testing new parameters to enable calculation of steady state
 
 if new_params == 1
@@ -164,8 +165,8 @@ function dydt = vectorized37(t,state,Ca_sim,Ca_dep,Ca_ind,k_unprime,K_A_prime,k_
     Ca = Ca_sim(round(t/delta_t)+1); 
 
     rate_matrix = Ca*Ca_dep + Ca_ind;
-    rate_matrix(2,3) = (1-Ca^2/(Ca^2 + K_A_prime^2))*k_unprime; %inhibition of 
-    rate_matrix(3,2) = (1-Ca^2/(Ca^2 + K_A_unprime^2))*k_prime;
+    rate_matrix(2,3) = (1-Ca^2/(Ca^2 + K_A_prime^2))*k_unprime; %inhibition of unpriming
+    rate_matrix(3,2) = (1+Ca^2/(Ca^2 + K_A_unprime^2))*k_prime; %acceleration of priming
     rate_matrix = rate_matrix - diag(sum(rate_matrix));
     
     dydt = rate_matrix*state; %runs slower if rate_matrix is set to sparse(rate_matrix)
@@ -178,14 +179,14 @@ function dydt = vectorized3(t,state,Ca_sim,Ca_dep,Ca_ind,k_unprime,k_prime,K_A_u
 
     rate_matrix = Ca*Ca_dep + Ca_ind;
     rate_matrix(2,3) = k_unprime; %no syt7 effect
-    rate_matrix(3,2) = (1-Ca^2/(Ca^2 + K_A_unprime^2))*k_prime;
+    rate_matrix(3,2) = (1+Ca^2/(Ca^2 + K_A_unprime^2))*k_prime;
     rate_matrix = rate_matrix - diag(sum(rate_matrix));
     
     dydt = rate_matrix*state; %runs slower if rate_matrix is set to sparse(rate_matrix)
     dydt(2) = dydt(2) + dydt(1);
 end
 
-function dydt = vectorized7(t,state,Ca_sim,Ca_dep,Ca_ind,k_unprime,k_prime,K_A_prime,delta_t)
+function dydt = vectorized7(t,state,Ca_sim,Ca_dep,Ca_ind,k_unprime,K_A_prime,k_prime,delta_t)
 
     Ca = Ca_sim(round(t/delta_t)+1); 
 
