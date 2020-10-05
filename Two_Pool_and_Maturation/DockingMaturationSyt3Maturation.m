@@ -41,19 +41,19 @@ mu = 2*FWHM; %time at which Ca_spike is maximal (ms)
 % k_maturation = .000965;
 % k_dematuration = .0001;
 
-k_docking = .001;
+k_docking = .003;
 k_undocking = 0;
-k_maturation = .01;
+k_maturation = .003;
 k_dematuration = 0;
 
 CDR = 0;
 Facil = 0;
 
-C_3 = 1;
+C_3 = 10;
 C_7 = 0;
 
-p_immature = .1;
-p_mature = .8;
+p_immature = .3;
+p_mature = .7;
 
 Ca_rest = 5e-8; %M
 Ca_spike = 2e-5; %M
@@ -67,8 +67,7 @@ ts_SS = linspace(0, t_SS, t_SS*delta_t + 1);
 
 state_0 = [1; 0; 0; 0]; %start all vesicles in immature undocked state 
 
-%syt3_ss = (Ca_rest^2./(K_D_3^2 + Ca_rest^2)).*C_3;
-[t0,state] = ode15s(@(t,state) dSS(t,state,k_docking,k_undocking,k_maturation,k_dematuration,k_on_3,k_off_3,Ca_rest), [0 t_SS], state_0);
+[t0,state] = ode15s(@(t,state) dSS(t,state,k_docking,k_undocking,k_maturation,k_dematuration,k_on_3,k_off_3,C_3,Ca_rest), [0 t_SS], state_0);
 
 SS = state(end,:);
 
@@ -103,11 +102,10 @@ function [ts, state, Fused_im, Fused_m, Ca_sim] = stim_sim(stimulus_times, max_t
     for i = 1:length(stim_delay)
 
         pre_stim = state(end,:);
-        Facil = pre_stim(4)*C_3;
-        post_stim = pre_stim + [pre_stim(2)*(p_immature+Facil)+pre_stim(3)*p_mature, -pre_stim(2)*(p_immature+Facil), -pre_stim(3)*p_mature, 0];
-        Fused_im(i) = pre_stim(2)*(p_immature+Facil);
+        post_stim = pre_stim + [pre_stim(2)*p_immature+pre_stim(3)*p_mature, -pre_stim(2)*p_immature, -pre_stim(3)*p_mature, 0];
+        Fused_im(i) = pre_stim(2)*p_immature;
         Fused_m(i) = pre_stim(3)*p_mature;
-        [t,out] = ode45(@(t,state) dState(t,state,k_docking,k_undocking,k_maturation,k_dematuration,k_on_3,k_off_3,Ca_sim), [ts(end) ts(end)+stim_delay(i)], post_stim);
+        [t,out] = ode45(@(t,state) dState(t,state,k_docking,k_undocking,k_maturation,k_dematuration,k_on_3,k_off_3,C_3,Ca_sim), [ts(end) ts(end)+stim_delay(i)], post_stim);
 
         state = [state(1:end-1,:); out];
 
@@ -344,8 +342,10 @@ function plot_one(stimulus_times)
     
 end
 
-function dydt = dSS(~,state,k_docking,k_undocking,k_maturation,k_dematuration,k_on_3,k_off_3,Ca_rest)
-
+function dydt = dSS(~,state,k_docking,k_undocking,k_maturation,k_dematuration,k_on_3,k_off_3,C_3,Ca_rest)
+    
+    k_maturation = k_maturation*(1+state(4)*C_3);
+    
     dydt(1,1) = -state(1)*k_docking + state(2)*k_undocking;
     dydt(2,1) = state(1)*k_docking - state(2)*k_undocking - state(2)*k_maturation + state(3)*k_dematuration;
     dydt(3,1) = state(2)*k_maturation - state(3)*k_dematuration;
@@ -353,9 +353,10 @@ function dydt = dSS(~,state,k_docking,k_undocking,k_maturation,k_dematuration,k_
 
 end
 
-function dydt = dState(t,state,k_docking,k_undocking,k_maturation,k_dematuration,k_on_3,k_off_3,Ca_sim)
+function dydt = dState(t,state,k_docking,k_undocking,k_maturation,k_dematuration,k_on_3,k_off_3,C_3,Ca_sim)
     
     Ca = Ca_sim(round(t/.01)+1);
+    k_maturation = k_maturation*(1+state(4)*C_3);
     
     dydt(1,1) = -state(1)*k_docking + state(2)*k_undocking;
     dydt(2,1) = state(1)*k_docking - state(2)*k_undocking - state(2)*k_maturation + state(3)*k_dematuration;

@@ -1,113 +1,112 @@
-global p_mature
-global p_immature
-global k_docking
-global k_undocking
-global k_maturation
-global k_dematuration
-global delta_t
-global SS
-% global K_D_3
-% global K_D_7
+%high means high release prob pool, low means low release prob pool
+global p_high
+global p_low
+global k_docking_high
+global k_docking_low
+global k_undocking_high
+global k_undocking_low
 global k_on_3
+global k_on_7
 global k_off_3
+global k_off_7
 global C_3
 global C_7
+global delta_t
 global Ca_rest
 global Ca_spike
 global Ca_residual
 global T_Ca_decay
 global sigma
 global mu
+global SS
 
+p_high = .8;
+p_low = .5;
 
-%stimulus_times = [0 10];
-stimulus_times = linspace(0,1000*19,20); %20 stims @ 1hz
+k_docking_high = 0.003;
+k_docking_low = 0.008;
+k_undocking_high = 0;
+k_undocking_low = 0.025;
 
-% K_D_3 = 3e5; %M^-1ms^-1 Hui
-% K_D_7 = 7.333e3; %M^-1ms^-1 Brandt/Knight 
+size_reserve = .99;
+size_high = .002;
+size_low = 1-size_high-size_reserve;
 
 k_on_3 = 3e5; %M^-1ms^-1 Hui
 %k_on_3 = 3e4; %M^-1ms^-1
 %k_on_3 = 0; %syt3 KO
-k_off_3 = 0.05; %ms^-1  Hui
+k_on_7 = 7.333e3; %M^-1ms^-1 Knight
+%k_on_7 = 0;
+k_off_3 = 0.1; %ms^-1  Hui
+%k_off_3 = 1.5; %ms^-1 kobbersmed/Sugita
+k_off_7 = 0.011; %ms^-1 Knight
+%k_off_7 = 6.15e-2; %ms^-1 Kobbersmed 
+
+C_3 = 1;
+C_7 = 1;
 
 FWHM = .34; %Local calcium full width half maximum ms
 sigma = FWHM/2.35; %variance
 mu = 2*FWHM; %time at which Ca_spike is maximal (ms)
-
-% hold values, PPR R^2 = .9724
-% k_docking = .03;
-% k_undocking = .0001;
-% k_maturation = .000965;
-% k_dematuration = .0001;
-
-k_docking = .001;
-k_undocking = 0;
-k_maturation = .01;
-k_dematuration = 0;
-
-CDR = 0;
-Facil = 0;
-
-C_3 = 1;
-C_7 = 0;
-
-p_immature = .1;
-p_mature = .8;
-
 Ca_rest = 5e-8; %M
 Ca_spike = 2e-5; %M
 Ca_residual = 250e-9; %M
 T_Ca_decay = 40; %ms
 
-delta_t = 1e-2; %ms
+delta_t = .01;
 
 t_SS = 10000; %ms
 ts_SS = linspace(0, t_SS, t_SS*delta_t + 1);
 
-state_0 = [1; 0; 0; 0]; %start all vesicles in immature undocked state 
+state_0 = [size_low; size_high; 0; 0; size_reserve; 0; 0]; %[empty low, empty high, low, high, reserve, syt3, syt7]
 
-%syt3_ss = (Ca_rest^2./(K_D_3^2 + Ca_rest^2)).*C_3;
-[t0,state] = ode15s(@(t,state) dSS(t,state,k_docking,k_undocking,k_maturation,k_dematuration,k_on_3,k_off_3,Ca_rest), [0 t_SS], state_0);
+[t0,state] = ode15s(@(t,state) dSS(t,state,k_docking_low*C_3,k_undocking_low,k_docking_high,k_undocking_high,k_on_3,k_off_3,k_on_7,k_off_7,Ca_rest), [0 t_SS], state_0);
 
 SS = state(end,:);
+
+% stimulus_times = linspace(0,1000*19,20); %20 stims 1hz
+% stimulus_times = linspace(0,100*19,20); %20 stims 10hz
+% stimulus_times = linspace(0,50*19,20); %20 stims 20hz
+stimulus_times_50 = linspace(0,20*19,20); %20 stims 50hz
 
 [Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_10, Fused_im_20, Fused_m_20, hz_20, Fused_im_50, Fused_m_50, hz_50] = test4();
 
 plot_four(Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_10, Fused_im_20, Fused_m_20, hz_20, Fused_im_50, Fused_m_50, hz_50);
 
+%plot_one(stimulus_times_50);
+
 function [ts, state, Fused_im, Fused_m, Ca_sim] = stim_sim(stimulus_times, max_time)
 
-    global p_immature
-    global p_mature
-    global k_docking
-    global k_undocking
-    global k_maturation
-    global k_dematuration
+    global p_high
+    global p_low
+    global k_docking_high
+    global k_docking_low
+    global k_undocking_high
+    global k_undocking_low
     global k_on_3
+    global k_on_7
     global k_off_3
+    global k_off_7
     global C_3
     global delta_t
     global SS
     
     state = SS;
     Ca_sim = create_Ca_signal(stimulus_times, max_time);
-    %[syt3, syt7] = syt_sim(Ca_sim);
     stim_delay = diff(stimulus_times);
     stim_delay = [stim_delay max_time-stimulus_times(end)];
 
     ts = 0;
     Fused_im = zeros(length(stimulus_times),1);
     Fused_m = zeros(length(stimulus_times),1);
-
+    
     for i = 1:length(stim_delay)
-
+        
         pre_stim = state(end,:);
-        Facil = pre_stim(4)*C_3;
-        post_stim = pre_stim + [pre_stim(2)*(p_immature+Facil)+pre_stim(3)*p_mature, -pre_stim(2)*(p_immature+Facil), -pre_stim(3)*p_mature, 0];
-        Fused_im(i) = pre_stim(2)*(p_immature+Facil);
-        Fused_m(i) = pre_stim(3)*p_mature;
-        [t,out] = ode45(@(t,state) dState(t,state,k_docking,k_undocking,k_maturation,k_dematuration,k_on_3,k_off_3,Ca_sim), [ts(end) ts(end)+stim_delay(i)], post_stim);
+        post_stim = pre_stim + [pre_stim(3)*p_low, pre_stim(4)*p_high, -pre_stim(3)*p_low, -pre_stim(4)*p_high, 0, 0, 0];
+        Fused_im(i) = pre_stim(3)*p_low;
+        Fused_m(i) = pre_stim(4)*p_high;
+        [t,out] = ode45(@(t,state) dState(t,state,k_docking_low*C_3,k_undocking_low,k_docking_high,k_undocking_high,k_on_3,k_off_3,k_on_7,k_off_7,Ca_sim), [ts(end) ts(end)+stim_delay(i)], post_stim);
 
         state = [state(1:end-1,:); out];
 
@@ -128,7 +127,6 @@ function Ca_sim = create_Ca_signal(stimulus_times, max_time)
     global delta_t
     global sigma
     global mu
-    
     
     ts = linspace(0,max_time,max_time/delta_t + 1);
     Ca_sim = zeros(1,length(ts));
@@ -177,17 +175,18 @@ function [Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_10, Fused_im_
 
 end
 
+
 function plot_four(Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_10, Fused_im_20, Fused_m_20, hz_20, Fused_im_50, Fused_m_50, hz_50)
     
     global C_3
-    
+
     hz_1_data = [1 0.904585375 0.906090801 0.885396962 0.888286409 0.882153581 0.868080327 0.870438248 0.858248517 0.854839359 0.840352061 0.845592803 0.847296096 0.844539428 0.829714224 0.830002447 0.812125568 0.815760427 0.81009733 0.799518304];
     hz_10_data = [1 0.616949107 0.628326956 0.604464053 0.565850677 0.537103779 0.525309915 0.503692205 0.474574723 0.470769015 0.461639789 0.45151103 0.450073867 0.451884135 0.44312584 0.429802182 0.433756546 0.431020365 0.423930097 0.416302277];
     hz_20_data = [1 0.489671267 0.444366914 0.457655745 0.430402833 0.416929064 0.38834963 0.351531591 0.348392421 0.329990273 0.31629381 0.305756525 0.3022066 0.288966797 0.283932027 0.266221279 0.276873203 0.265228816 0.262831634 0.258863279];
     hz_50_data = [1 0.344586239 0.28753639 0.241585061 0.22098407 0.212199666 0.198432318 0.177849609 0.158522769 0.144448699 0.131731778 0.119584277 0.111943939 0.106093112 0.098933385 0.095593041 0.08975884 0.087444448 0.082325078 0.083824248];
     labels = ["1 Hz data", "10 Hz data", "20 Hz data", "50 Hz data"];
     
-    if C_3 == 0 %KO
+    if C_3 ~= 1 %KO
         hz_1_data = [1 0.883284703 0.858855554 0.845649686 0.837780118 0.842965361 0.828148214 0.806240914 0.799098827 0.792257423 0.789414849 0.785705274 0.763849243 0.724204838 0.750418701 0.740545466 0.743069941 0.74399981 0.736566288 0.736820291];
         hz_10_data = [1 0.452012818 0.44831423 0.433521032 0.376651907 0.361794245 0.322100309 0.326965448 0.309113437 0.303756475 0.293420616 0.298110805 0.286918883 0.27799293 0.292249154 0.292399085 0.284254389 0.286765184 0.277340747 0.278088675];
         hz_20_data = [1 0.348773535 0.295773884 0.279677667 0.268386245 0.235162278 0.21836187 0.203592063 0.18263844 0.175787404 0.156893656 0.154776094 0.149120775 0.1555285 0.142093573 0.138859878 0.132577603 0.136777797 0.132698411 0.126999323];
@@ -210,10 +209,10 @@ function plot_four(Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_10, 
     set(gca,'xlim',[1 20])
     set(gca,'ylim',[0 1])
     hold on
-    plot(hz_1,'ko','Markersize',5)
+    plot(hz_1,'k.','Markersize',20)
     plot(Fused_im_1/Fused_1_norm,'rv')
     plot(Fused_m_1/Fused_1_norm,'g^')
-    %legend(labels(1),'1 Hz Simulation','Low P Pool Fusion','High P Pool Fusion')
+    legend(labels(1),'1 Hz Simulation','Low P Pool Fusion','High P Pool Fusion')
     
     subplot(2,2,2)
     plot(hz_10_data,'-k')
@@ -223,10 +222,10 @@ function plot_four(Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_10, 
     set(gca,'xlim',[1 20])
     set(gca,'ylim',[0 1])
     hold on
-    plot(hz_10,'ko','Markersize',5)
+    plot(hz_10,'k.','Markersize',20)
     plot(Fused_im_10/Fused_10_norm,'rv')
     plot(Fused_m_10/Fused_10_norm,'g^')
-    %legend(labels(2),'10 Hz Simulation','Low P Pool Fusion','High P Pool Fusion')
+    legend(labels(2),'10 Hz Simulation','Low P Pool Fusion','High P Pool Fusion')
     
     subplot(2,2,3)
     plot(hz_20_data,'-k')
@@ -236,23 +235,23 @@ function plot_four(Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_10, 
     set(gca,'xlim',[1 20])
     set(gca,'ylim',[0 1])
     hold on
-    plot(hz_20,'ko','Markersize',5)
+    plot(hz_20,'k.','Markersize',20)
     plot(Fused_im_20/Fused_20_norm,'rv')
     plot(Fused_m_20/Fused_20_norm,'g^')
-    %legend(labels(3),'20 Hz Simulation','Low P Pool Fusion','High P Pool Fusion')
+    legend(labels(3),'20 Hz Simulation','Low P Pool Fusion','High P Pool Fusion')
     
     subplot(2,2,4)
     plot(hz_50_data,'-k')
-    title('50 Hz')
+    title('1 Hz')
     xlabel('Pulse #')
     ylabel('Peak EPSC')
     set(gca,'xlim',[1 20])
     set(gca,'ylim',[0 1])
     hold on
-    plot(hz_50,'ko','Markersize',5)
+    plot(hz_50,'k.','Markersize',20)
     plot(Fused_im_50/Fused_50_norm,'rv')
     plot(Fused_m_50/Fused_50_norm,'g^')
-    %legend(labels(4),'50 Hz Simulation','Low P Pool Fusion','High P Pool Fusion')
+    legend(labels(4),'50 Hz Simulation','Low P Pool Fusion','High P Pool Fusion')
 end
 
 function plot_one(stimulus_times)
@@ -266,7 +265,7 @@ function plot_one(stimulus_times)
     
     figure
     subplot(3,2,1)
-    plot(Fused,'ko','MarkerSize', 5)
+    plot(Fused,'k.','MarkerSize', 20)
     xlabel('Pulse #')
     ylabel('Peak EPSC')
     set(gca,'xlim',[1 length(Fused)])
@@ -278,7 +277,7 @@ function plot_one(stimulus_times)
     hz_20_data = [1 0.489671267 0.444366914 0.457655745 0.430402833 0.416929064 0.38834963 0.351531591 0.348392421 0.329990273 0.31629381 0.305756525 0.3022066 0.288966797 0.283932027 0.266221279 0.276873203 0.265228816 0.262831634 0.258863279];
     hz_50_data = [1 0.344586239 0.28753639 0.241585061 0.22098407 0.212199666 0.198432318 0.177849609 0.158522769 0.144448699 0.131731778 0.119584277 0.111943939 0.106093112 0.098933385 0.095593041 0.08975884 0.087444448 0.082325078 0.083824248];
 
-    if C_3 == 0 %KO
+    if C_3 ~= 1 %KO
         hz_1_data = [1 0.883284703 0.858855554 0.845649686 0.837780118 0.842965361 0.828148214 0.806240914 0.799098827 0.792257423 0.789414849 0.785705274 0.763849243 0.724204838 0.750418701 0.740545466 0.743069941 0.74399981 0.736566288 0.736820291];
         hz_10_data = [1 0.452012818 0.44831423 0.433521032 0.376651907 0.361794245 0.322100309 0.326965448 0.309113437 0.303756475 0.293420616 0.298110805 0.286918883 0.27799293 0.292249154 0.292399085 0.284254389 0.286765184 0.277340747 0.278088675];
         hz_20_data = [1 0.348773535 0.295773884 0.279677667 0.268386245 0.235162278 0.21836187 0.203592063 0.18263844 0.175787404 0.156893656 0.154776094 0.149120775 0.1555285 0.142093573 0.138859878 0.132577603 0.136777797 0.132698411 0.126999323];
@@ -329,14 +328,14 @@ function plot_one(stimulus_times)
     legend('Empty Low P Sites','Empty High P Sites','Total Empty Sites');
 
     subplot(3,2,5)
-    plot(ts, state(:,5))
+    plot(ts, state(:,6))
     xlabel('Time (ms)')
     ylabel('Syt3')
     set(gca,'xlim',[ts(1) max_time])
     set(gca,'ylim',[0 1])
 
     subplot(3,2,6)
-    plot(ts, state(:,6))
+    plot(ts, state(:,7))
     xlabel('Time (ms)')
     ylabel('Syt7')
     set(gca,'xlim',[ts(1) max_time])
@@ -344,22 +343,32 @@ function plot_one(stimulus_times)
     
 end
 
-function dydt = dSS(~,state,k_docking,k_undocking,k_maturation,k_dematuration,k_on_3,k_off_3,Ca_rest)
 
-    dydt(1,1) = -state(1)*k_docking + state(2)*k_undocking;
-    dydt(2,1) = state(1)*k_docking - state(2)*k_undocking - state(2)*k_maturation + state(3)*k_dematuration;
-    dydt(3,1) = state(2)*k_maturation - state(3)*k_dematuration;
-    dydt(4,1) = (1-state(4))*k_on_3*Ca_rest - state(4)*k_off_3;
+function dydt = dSS(~,state,k_docking_low,k_undocking_low,k_docking_high,k_undocking_high,k_on_3,k_off_3,k_on_7,k_off_7,Ca_rest)
+    
+    k_docking_low = k_docking_low*state(6);
 
+    dydt(1,1) = -state(1)*k_docking_low + state(3)*k_undocking_low;
+    dydt(2,1) = -state(2)*k_docking_high + state(4)*k_undocking_high;
+    dydt(3,1) = state(1)*k_docking_low - state(3)*k_undocking_low;
+    dydt(4,1) = state(2)*k_docking_high - state(4)*k_undocking_high;
+    dydt(5,1) = 0;
+    dydt(6,1) = (1-state(6))*k_on_3*Ca_rest - state(6)*k_off_3;
+    dydt(7,1) = (1-state(7))*k_on_7*Ca_rest - state(7)*k_off_7;
+    
 end
 
-function dydt = dState(t,state,k_docking,k_undocking,k_maturation,k_dematuration,k_on_3,k_off_3,Ca_sim)
+function dydt = dState(t,state,k_docking_low,k_undocking_low,k_docking_high,k_undocking_high,k_on_3,k_off_3,k_on_7,k_off_7,Ca_sim)
     
     Ca = Ca_sim(round(t/.01)+1);
+    k_docking_low = k_docking_low*state(6);
     
-    dydt(1,1) = -state(1)*k_docking + state(2)*k_undocking;
-    dydt(2,1) = state(1)*k_docking - state(2)*k_undocking - state(2)*k_maturation + state(3)*k_dematuration;
-    dydt(3,1) = state(2)*k_maturation - state(3)*k_dematuration;
-    dydt(4,1) = (1-state(4))*k_on_3*Ca - state(4)*k_off_3;
-
+    dydt(1,1) = -state(1)*k_docking_low*state(5) + state(3)*k_undocking_low;
+    dydt(2,1) = -state(2)*k_docking_high*state(5) + state(4)*k_undocking_high;
+    dydt(3,1) = state(1)*k_docking_low*state(5) - state(3)*k_undocking_low;
+    dydt(4,1) = state(2)*k_docking_high*state(5) - state(4)*k_undocking_high;
+    dydt(5,1) = -state(1)*k_docking_low*state(5) - state(2)*k_docking_high*state(5);
+    dydt(6,1) = (1-state(6))*k_on_3*Ca - state(6)*k_off_3;
+    dydt(7,1) = (1-state(7))*k_on_7*Ca - state(7)*k_off_7;
+    
 end

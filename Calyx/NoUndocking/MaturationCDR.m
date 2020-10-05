@@ -13,13 +13,13 @@ global k_off_7
 global C_3
 global C_7
 global Ca_rest
-global Ca_spike
+%global Ca_spike
 global Ca_residual
 global T_Ca_decay
-global sigma
+%global sigma
 global mu
 
-type = "WT";
+type = "syt3KO";
 
 if type == "WT"
     data = matfile('WT_data.mat').WT_data;
@@ -50,28 +50,22 @@ k_on_7 = 7.333e3; %Knight
 k_off_7 = 1.1e-2;
 
 FWHM = .34; %Local calcium full width half maximum ms
-sigma = FWHM/2.35; %variance
+%sigma = FWHM/2.35; %variance
 mu = 2*FWHM; %time at which Ca_spike is maximal (ms)
 
-% hold values, PPR R^2 = .9724
-% k_docking = .03;
-% k_undocking = .0001;
-% k_maturation = .000965;
-% k_dematuration = .0001;
-
-k_docking = .00015;
+k_docking = .013047;
 k_undocking = 0;
-k_maturation = .00012289;
-k_dematuration = 0.000022888;
+k_maturation = .00012;
+k_dematuration = 0.000023;
 
-p_immature = .07;
-p_mature = .27;
+p_immature = .056;
+p_mature = .26;
 
-C_3 = 1;
-C_7 = 1;
+C_3 = 0.005894;
+C_7 = 0;
 
-Ca_rest = 50e-9; %M
-Ca_spike = 2e-5; %M
+Ca_rest = 50e-9; %M Calyx; Sakmann 1997
+%Ca_spike = 2e-5; %M
 Ca_residual = 500e-9; %M
 T_Ca_decay = 50; %ms
 
@@ -122,9 +116,9 @@ function [ts, state, Fused_im, Fused_m, Ca_sim] = stim_sim(stimulus_times, max_t
     for i = 1:length(stim_delay)
 
         pre_stim = state(end,:);
-        post_stim = pre_stim + [pre_stim(2)*p_immature+pre_stim(3)*p_mature*(1+C_7*pre_stim(5)), -pre_stim(2)*p_immature, -pre_stim(3)*p_mature*(1+C_7*pre_stim(5)), 0, 0];
-        Fused_im(i) = pre_stim(2)*p_immature;
-        Fused_m(i) = pre_stim(3)*p_mature*(1+C_7*pre_stim(5));
+        post_stim = pre_stim + [pre_stim(2)*p_immature*(1+C_7*pre_stim(5))+pre_stim(3)*p_mature, -pre_stim(2)*p_immature*(1+C_7*pre_stim(5)), -pre_stim(3)*p_mature, 0, 0];
+        Fused_im(i) = pre_stim(2)*p_immature*(1+C_7*pre_stim(5));
+        Fused_m(i) = pre_stim(3)*p_mature;
         [t,out] = ode45(@(t,state) dState(t,state,k_docking,k_undocking,k_maturation,k_dematuration,k_on_3,k_off_3,k_on_7,k_off_7,C_3,Ca_sim), [ts(end) ts(end)+stim_delay(i)], post_stim);
 
         state = [state(1:end-1,:); out];
@@ -136,44 +130,15 @@ function [ts, state, Fused_im, Fused_m, Ca_sim] = stim_sim(stimulus_times, max_t
     ts = [delta_t; ts];
 end
 
-
-% function Ca_sim = create_Ca_signal(stimulus_times, max_time)
-%     
-%     global Ca_rest
-%     global Ca_spike
-%     global Ca_residual
-%     global T_Ca_decay
-%     global delta_t
-%     global sigma
-%     global mu
-%     
-%     
-%     ts = linspace(0,max_time,max_time/delta_t + 1);
-%     Ca_sim = zeros(1,length(ts));
-%     Ca_sim = Ca_sim + Ca_rest;
-% 
-%     for t = 1:length(stimulus_times) %simulate calcium influx
-% 
-%         spike_start_index = round(stimulus_times(t)/delta_t) + 1; %if 1st stim is at t=0 index should be one, round is necessary due to IEEE fp returning scientific notation ocasionally
-%         spike_peak_index = round((stimulus_times(t)+mu)/delta_t) + 1;
-% 
-%         Ca_sim(spike_start_index:end) = Ca_sim(spike_start_index:end) + Ca_spike*exp(-1*((ts(1:end - spike_start_index + 1) - mu)/sigma).^2/2); %if 1st stim is at t=0 index should be one
-% 
-%         Ca_sim(spike_peak_index:end) = Ca_sim(spike_peak_index:end) + Ca_residual*exp(-1*ts(1:end - spike_peak_index + 1)/T_Ca_decay);    
-% 
-%     end
-% 
-% end
-
 %only simulate res. Ca
 function Ca_sim = create_Ca_signal(stimulus_times, max_time)
     
     global Ca_rest
-    global Ca_spike
+    %global Ca_spike
     global Ca_residual
     global T_Ca_decay
     global delta_t
-    global sigma
+    %global sigma
     global mu
     
     
@@ -183,7 +148,7 @@ function Ca_sim = create_Ca_signal(stimulus_times, max_time)
 
     for t = 1:length(stimulus_times) %simulate calcium influx
 
-        spike_start_index = round(stimulus_times(t)/delta_t) + 1; %if 1st stim is at t=0 index should be one, round is necessary due to IEEE fp returning scientific notation ocasionally
+        %spike_start_index = round(stimulus_times(t)/delta_t) + 1; %if 1st stim is at t=0 index should be one, round is necessary due to IEEE fp returning scientific notation ocasionally
         spike_peak_index = round((stimulus_times(t)+mu)/delta_t) + 1;
 
         %Ca_sim(spike_start_index:end) = Ca_sim(spike_start_index:end) + Ca_spike*exp(-1*((ts(1:end - spike_start_index + 1) - mu)/sigma).^2/2); %if 1st stim is at t=0 index should be one

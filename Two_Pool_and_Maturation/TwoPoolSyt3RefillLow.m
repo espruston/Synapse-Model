@@ -1,113 +1,130 @@
-global p_mature
-global p_immature
-global k_docking
-global k_undocking
-global k_maturation
-global k_dematuration
-global delta_t
-global SS
-% global K_D_3
-% global K_D_7
+%high means high release prob pool, low means low release prob pool
+global p_high
+global p_low
+global k_docking_high
+global k_docking_low
+global k_undocking_high
+global k_undocking_low
 global k_on_3
+global k_on_7
 global k_off_3
+global k_off_7
 global C_3
 global C_7
+global delta_t
 global Ca_rest
 global Ca_spike
 global Ca_residual
 global T_Ca_decay
 global sigma
 global mu
+global SS
+
+p_high = .95;
+p_low = .1;
+
+k_docking_high = 0.002;
+k_docking_low = 0.005;
+k_undocking_high = 0;
+k_undocking_low = 0.002;
 
 
-%stimulus_times = [0 10];
-stimulus_times = linspace(0,1000*19,20); %20 stims @ 1hz
-
-% K_D_3 = 3e5; %M^-1ms^-1 Hui
-% K_D_7 = 7.333e3; %M^-1ms^-1 Brandt/Knight 
+size_high = .25;
+size_low = 1-size_high;
 
 k_on_3 = 3e5; %M^-1ms^-1 Hui
 %k_on_3 = 3e4; %M^-1ms^-1
 %k_on_3 = 0; %syt3 KO
+k_on_7 = 7.333e3; %M^-1ms^-1 Knight
+%k_on_7 = 0;
 k_off_3 = 0.05; %ms^-1  Hui
-
-FWHM = .34; %Local calcium full width half maximum ms
-sigma = FWHM/2.35; %variance
-mu = 2*FWHM; %time at which Ca_spike is maximal (ms)
-
-% hold values, PPR R^2 = .9724
-% k_docking = .03;
-% k_undocking = .0001;
-% k_maturation = .000965;
-% k_dematuration = .0001;
-
-k_docking = .001;
-k_undocking = 0;
-k_maturation = .01;
-k_dematuration = 0;
-
-CDR = 0;
-Facil = 0;
+%k_off_3 = 1.5; %ms^-1 kobbersmed/Sugita
+k_off_7 = 0.011; %ms^-1 Knight
+%k_off_7 = 6.15e-2; %ms^-1 Kobbersmed 
 
 C_3 = 1;
 C_7 = 0;
 
-p_immature = .1;
-p_mature = .8;
+%best values
+% p_high = .95;
+% p_low = .1;
+% 
+% k_docking_high = 0.002;
+% k_docking_low = 0.0003;
+% k_undocking_high = 0.0002;
+% k_undocking_low = 0.00003;
+% 
+% 
+% size_high = .25;
+% size_low = 1-size_high;
+% 
+% k_on_3 = 3e5; %M^-1ms^-1 Hui
+% k_off_3 = 0.05;
+% 
+% C_3 = 0.1;
 
+FWHM = .34; %Local calcium full width half maximum ms
+sigma = FWHM/2.35; %variance
+mu = 2*FWHM; %time at which Ca_spike is maximal (ms)
 Ca_rest = 5e-8; %M
 Ca_spike = 2e-5; %M
 Ca_residual = 250e-9; %M
 T_Ca_decay = 40; %ms
 
-delta_t = 1e-2; %ms
+delta_t = .01;
 
 t_SS = 10000; %ms
 ts_SS = linspace(0, t_SS, t_SS*delta_t + 1);
 
-state_0 = [1; 0; 0; 0]; %start all vesicles in immature undocked state 
+state_0 = [size_low; size_high; 0; 0; 0; 0]; %[empty low, empty high, low, high, syt3, syt7]
 
-%syt3_ss = (Ca_rest^2./(K_D_3^2 + Ca_rest^2)).*C_3;
-[t0,state] = ode15s(@(t,state) dSS(t,state,k_docking,k_undocking,k_maturation,k_dematuration,k_on_3,k_off_3,Ca_rest), [0 t_SS], state_0);
+[t0,state] = ode15s(@(t,state) dSS(t,state,k_docking_low,k_undocking_low,k_docking_high,k_undocking_high,k_on_3,k_off_3,k_on_7,k_off_7,Ca_rest,C_3), [0 t_SS], state_0);
 
 SS = state(end,:);
+
+% stimulus_times = linspace(0,1000*19,20); %20 stims 1hz
+% stimulus_times = linspace(0,100*19,20); %20 stims 10hz
+% stimulus_times = linspace(0,50*19,20); %20 stims 20hz
+stimulus_times_50 = linspace(0,20*19,20); %20 stims 50hz
 
 [Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_10, Fused_im_20, Fused_m_20, hz_20, Fused_im_50, Fused_m_50, hz_50] = test4();
 
 plot_four(Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_10, Fused_im_20, Fused_m_20, hz_20, Fused_im_50, Fused_m_50, hz_50);
 
+%plot_one(stimulus_times_50);
+
 function [ts, state, Fused_im, Fused_m, Ca_sim] = stim_sim(stimulus_times, max_time)
 
-    global p_immature
-    global p_mature
-    global k_docking
-    global k_undocking
-    global k_maturation
-    global k_dematuration
+    global p_high
+    global p_low
+    global k_docking_high
+    global k_docking_low
+    global k_undocking_high
+    global k_undocking_low
     global k_on_3
+    global k_on_7
     global k_off_3
+    global k_off_7
     global C_3
     global delta_t
     global SS
     
     state = SS;
     Ca_sim = create_Ca_signal(stimulus_times, max_time);
-    %[syt3, syt7] = syt_sim(Ca_sim);
     stim_delay = diff(stimulus_times);
     stim_delay = [stim_delay max_time-stimulus_times(end)];
 
     ts = 0;
     Fused_im = zeros(length(stimulus_times),1);
     Fused_m = zeros(length(stimulus_times),1);
-
+    
     for i = 1:length(stim_delay)
-
+        
         pre_stim = state(end,:);
-        Facil = pre_stim(4)*C_3;
-        post_stim = pre_stim + [pre_stim(2)*(p_immature+Facil)+pre_stim(3)*p_mature, -pre_stim(2)*(p_immature+Facil), -pre_stim(3)*p_mature, 0];
-        Fused_im(i) = pre_stim(2)*(p_immature+Facil);
-        Fused_m(i) = pre_stim(3)*p_mature;
-        [t,out] = ode45(@(t,state) dState(t,state,k_docking,k_undocking,k_maturation,k_dematuration,k_on_3,k_off_3,Ca_sim), [ts(end) ts(end)+stim_delay(i)], post_stim);
+        post_stim = pre_stim + [pre_stim(3)*p_low, pre_stim(4)*p_high, -pre_stim(3)*p_low, -pre_stim(4)*p_high, 0, 0];
+        Fused_im(i) = pre_stim(3)*p_low;
+        Fused_m(i) = pre_stim(4)*p_high;
+        [t,out] = ode45(@(t,state) dState(t,state,k_docking_low,k_undocking_low,k_docking_high,k_undocking_high,k_on_3,k_off_3,k_on_7,k_off_7,Ca_sim,C_3), [ts(end) ts(end)+stim_delay(i)], post_stim);
 
         state = [state(1:end-1,:); out];
 
@@ -128,7 +145,6 @@ function Ca_sim = create_Ca_signal(stimulus_times, max_time)
     global delta_t
     global sigma
     global mu
-    
     
     ts = linspace(0,max_time,max_time/delta_t + 1);
     Ca_sim = zeros(1,length(ts));
@@ -176,6 +192,7 @@ function [Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_10, Fused_im_
     hz_50 = Fused_50/Fused_50(1);
 
 end
+
 
 function plot_four(Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_10, Fused_im_20, Fused_m_20, hz_20, Fused_im_50, Fused_m_50, hz_50)
     
@@ -254,6 +271,7 @@ function plot_four(Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_10, 
     plot(Fused_m_50/Fused_50_norm,'g^')
     %legend(labels(4),'50 Hz Simulation','Low P Pool Fusion','High P Pool Fusion')
 end
+
 
 function plot_one(stimulus_times)
     
@@ -344,22 +362,30 @@ function plot_one(stimulus_times)
     
 end
 
-function dydt = dSS(~,state,k_docking,k_undocking,k_maturation,k_dematuration,k_on_3,k_off_3,Ca_rest)
 
-    dydt(1,1) = -state(1)*k_docking + state(2)*k_undocking;
-    dydt(2,1) = state(1)*k_docking - state(2)*k_undocking - state(2)*k_maturation + state(3)*k_dematuration;
-    dydt(3,1) = state(2)*k_maturation - state(3)*k_dematuration;
-    dydt(4,1) = (1-state(4))*k_on_3*Ca_rest - state(4)*k_off_3;
+function dydt = dSS(~,state,k_docking_low,k_undocking_low,k_docking_high,k_undocking_high,k_on_3,k_off_3,k_on_7,k_off_7,Ca_rest,C_3)
+    
+    k_docking_low = k_docking_low*(1+state(5)*C_3);
 
+    dydt(1,1) = -state(1)*k_docking_low + state(3)*k_undocking_low;
+    dydt(2,1) = -state(2)*k_docking_high + state(4)*k_undocking_high;
+    dydt(3,1) = state(1)*k_docking_low - state(3)*k_undocking_low;
+    dydt(4,1) = state(2)*k_docking_high - state(4)*k_undocking_high;
+    dydt(5,1) = (1-state(5))*k_on_3*Ca_rest - state(5)*k_off_3;
+    dydt(6,1) = (1-state(6))*k_on_7*Ca_rest - state(6)*k_off_7;
+    
 end
 
-function dydt = dState(t,state,k_docking,k_undocking,k_maturation,k_dematuration,k_on_3,k_off_3,Ca_sim)
+function dydt = dState(t,state,k_docking_low,k_undocking_low,k_docking_high,k_undocking_high,k_on_3,k_off_3,k_on_7,k_off_7,Ca_sim,C_3)
     
     Ca = Ca_sim(round(t/.01)+1);
+    k_docking_low = k_docking_low*(1+state(5)*C_3);
     
-    dydt(1,1) = -state(1)*k_docking + state(2)*k_undocking;
-    dydt(2,1) = state(1)*k_docking - state(2)*k_undocking - state(2)*k_maturation + state(3)*k_dematuration;
-    dydt(3,1) = state(2)*k_maturation - state(3)*k_dematuration;
-    dydt(4,1) = (1-state(4))*k_on_3*Ca - state(4)*k_off_3;
-
+    dydt(1,1) = -state(1)*k_docking_low + state(3)*k_undocking_low;
+    dydt(2,1) = -state(2)*k_docking_high + state(4)*k_undocking_high;
+    dydt(3,1) = state(1)*k_docking_low - state(3)*k_undocking_low;
+    dydt(4,1) = state(2)*k_docking_high - state(4)*k_undocking_high;
+    dydt(5,1) = (1-state(5))*k_on_3*Ca - state(5)*k_off_3;
+    dydt(6,1) = (1-state(6))*k_on_7*Ca - state(6)*k_off_7;
+    
 end

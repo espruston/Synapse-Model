@@ -1,5 +1,6 @@
 %stimulus_times = [0 10];
 stimulus_times = linspace(0,1000*19,20); %20 stims
+stimulus_times = linspace(0,50*19,20); %20 stims
 
 K_D_3 = 3e5; %M^-1ms^-1 Hui
 K_D_7 = 7.333e3; %M^-1ms^-1 Brandt/Knight 

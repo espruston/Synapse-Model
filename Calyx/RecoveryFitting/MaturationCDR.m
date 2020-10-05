@@ -13,13 +13,13 @@ global k_off_7
 global C_3
 global C_7
 global Ca_rest
-global Ca_spike
+%global Ca_spike
 global Ca_residual
 global T_Ca_decay
-global sigma
+%global sigma
 global mu
 
-type = "WT";
+type = "syt7KO";
 
 if type == "WT"
     data = matfile('WT_data.mat').WT_data;
@@ -40,9 +40,10 @@ hz_20_data = data(:,3);
 hz_50_data = data(:,4);
 hz_100_data = data(:,5);
 hz_200_data = data(:,6);
+hz_200_recovery = data(1:11,7);
 
 %stimulus_times = [0 10];
-stimulus_times = linspace(0,50*99,100); %100 stims @ 20hz
+stimulus_times = linspace(0,5*99,100); %100 stims @ 200hz
 
 k_on_3 = 3e5; %M^-1ms^-1 Hui
 k_off_3 = 0.05; %ms^-1  Hui
@@ -50,7 +51,7 @@ k_on_7 = 7.333e3; %Knight
 k_off_7 = 1.1e-2;
 
 FWHM = .34; %Local calcium full width half maximum ms
-sigma = FWHM/2.35; %variance
+%sigma = FWHM/2.35; %variance
 mu = 2*FWHM; %time at which Ca_spike is maximal (ms)
 
 % hold values, PPR R^2 = .9724
@@ -59,19 +60,19 @@ mu = 2*FWHM; %time at which Ca_spike is maximal (ms)
 % k_maturation = .000965;
 % k_dematuration = .0001;
 
-k_docking = .00015;
-k_undocking = 0;
-k_maturation = .00012289;
-k_dematuration = 0.000022888;
+k_docking = .01;
+k_undocking = 0.0016;
+k_maturation = .00058;
+k_dematuration = 0.000054;
 
-p_immature = .07;
-p_mature = .27;
+p_immature = .19;
+p_mature = .65;
 
 C_3 = 1;
-C_7 = 1;
+C_7 = 0;
 
 Ca_rest = 50e-9; %M
-Ca_spike = 2e-5; %M
+%Ca_spike = 2e-5; %M
 Ca_residual = 500e-9; %M
 T_Ca_decay = 50; %ms
 
@@ -88,9 +89,9 @@ SS = state(end,:);
 
 [Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_10, Fused_im_20, Fused_m_20, hz_20, Fused_im_50, Fused_m_50, hz_50, Fused_im_100, Fused_m_100, hz_100, Fused_im_200, Fused_m_200, hz_200] = test6();
 
-plot_six(data,Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_10, Fused_im_20, Fused_m_20, hz_20, Fused_im_50, Fused_m_50, hz_50, Fused_im_100, Fused_m_100, hz_100, Fused_im_200, Fused_m_200, hz_200);
+plot_seven(data,Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_10, Fused_im_20, Fused_m_20, hz_20, Fused_im_50, Fused_m_50, hz_50, Fused_im_100, Fused_m_100, hz_100, Fused_im_200, Fused_m_200, hz_200);
 
-plot_one(data,stimulus_times)
+%plot_one(data,stimulus_times)
     
 function [ts, state, Fused_im, Fused_m, Ca_sim] = stim_sim(stimulus_times, max_time)
 
@@ -122,9 +123,9 @@ function [ts, state, Fused_im, Fused_m, Ca_sim] = stim_sim(stimulus_times, max_t
     for i = 1:length(stim_delay)
 
         pre_stim = state(end,:);
-        post_stim = pre_stim + [pre_stim(2)*p_immature+pre_stim(3)*p_mature*(1+C_7*pre_stim(5)), -pre_stim(2)*p_immature, -pre_stim(3)*p_mature*(1+C_7*pre_stim(5)), 0, 0];
-        Fused_im(i) = pre_stim(2)*p_immature;
-        Fused_m(i) = pre_stim(3)*p_mature*(1+C_7*pre_stim(5));
+        post_stim = pre_stim + [pre_stim(2)*p_immature*(1+C_7*pre_stim(5))+pre_stim(3)*p_mature, -pre_stim(2)*p_immature*(1+C_7*pre_stim(5)), -pre_stim(3)*p_mature, 0, 0];
+        Fused_im(i) = pre_stim(2)*p_immature*(1+C_7*pre_stim(5));
+        Fused_m(i) = pre_stim(3)*p_mature;
         [t,out] = ode45(@(t,state) dState(t,state,k_docking,k_undocking,k_maturation,k_dematuration,k_on_3,k_off_3,k_on_7,k_off_7,C_3,Ca_sim), [ts(end) ts(end)+stim_delay(i)], post_stim);
 
         state = [state(1:end-1,:); out];
@@ -136,44 +137,15 @@ function [ts, state, Fused_im, Fused_m, Ca_sim] = stim_sim(stimulus_times, max_t
     ts = [delta_t; ts];
 end
 
-
-% function Ca_sim = create_Ca_signal(stimulus_times, max_time)
-%     
-%     global Ca_rest
-%     global Ca_spike
-%     global Ca_residual
-%     global T_Ca_decay
-%     global delta_t
-%     global sigma
-%     global mu
-%     
-%     
-%     ts = linspace(0,max_time,max_time/delta_t + 1);
-%     Ca_sim = zeros(1,length(ts));
-%     Ca_sim = Ca_sim + Ca_rest;
-% 
-%     for t = 1:length(stimulus_times) %simulate calcium influx
-% 
-%         spike_start_index = round(stimulus_times(t)/delta_t) + 1; %if 1st stim is at t=0 index should be one, round is necessary due to IEEE fp returning scientific notation ocasionally
-%         spike_peak_index = round((stimulus_times(t)+mu)/delta_t) + 1;
-% 
-%         Ca_sim(spike_start_index:end) = Ca_sim(spike_start_index:end) + Ca_spike*exp(-1*((ts(1:end - spike_start_index + 1) - mu)/sigma).^2/2); %if 1st stim is at t=0 index should be one
-% 
-%         Ca_sim(spike_peak_index:end) = Ca_sim(spike_peak_index:end) + Ca_residual*exp(-1*ts(1:end - spike_peak_index + 1)/T_Ca_decay);    
-% 
-%     end
-% 
-% end
-
 %only simulate res. Ca
 function Ca_sim = create_Ca_signal(stimulus_times, max_time)
     
     global Ca_rest
-    global Ca_spike
+    %global Ca_spike
     global Ca_residual
     global T_Ca_decay
     global delta_t
-    global sigma
+    %global sigma
     global mu
     
     
@@ -183,7 +155,7 @@ function Ca_sim = create_Ca_signal(stimulus_times, max_time)
 
     for t = 1:length(stimulus_times) %simulate calcium influx
 
-        spike_start_index = round(stimulus_times(t)/delta_t) + 1; %if 1st stim is at t=0 index should be one, round is necessary due to IEEE fp returning scientific notation ocasionally
+        %spike_start_index = round(stimulus_times(t)/delta_t) + 1; %if 1st stim is at t=0 index should be one, round is necessary due to IEEE fp returning scientific notation ocasionally
         spike_peak_index = round((stimulus_times(t)+mu)/delta_t) + 1;
 
         %Ca_sim(spike_start_index:end) = Ca_sim(spike_start_index:end) + Ca_spike*exp(-1*((ts(1:end - spike_start_index + 1) - mu)/sigma).^2/2); %if 1st stim is at t=0 index should be one
@@ -203,7 +175,8 @@ function [Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_10, Fused_im_
     stimulus_times_50 = linspace(0,20*99,100);
     stimulus_times_100 = linspace(0,10*99,100);
     stimulus_times_200 = linspace(0,5*99,100);
-    
+    stimulus_times_200 = [stimulus_times_200, stimulus_times_200(end)+10, stimulus_times_200(end)+20, stimulus_times_200(end)+50, stimulus_times_200(end)+100, stimulus_times_200(end)+200, stimulus_times_200(end)+500, stimulus_times_200(end)+1000, stimulus_times_200(end)+2000, stimulus_times_200(end)+5000, stimulus_times_200(end)+10000, stimulus_times_200(end)+20000]; %recovery
+
 
     max_time_1 = stimulus_times_1(end) + stimulus_times_1(2)*30;
     [~, ~, Fused_im_1, Fused_m_1,~] = stim_sim(stimulus_times_1, max_time_1);
@@ -238,7 +211,7 @@ function [Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_10, Fused_im_
 end
 
 
-function plot_six(data,Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_10, Fused_im_20, Fused_m_20, hz_20, Fused_im_50, Fused_m_50, hz_50, Fused_im_100, Fused_m_100, hz_100, Fused_im_200, Fused_m_200, hz_200)
+function plot_seven(data,Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_10, Fused_im_20, Fused_m_20, hz_20, Fused_im_50, Fused_m_50, hz_50, Fused_im_100, Fused_m_100, hz_100, Fused_im_200, Fused_m_200, hz_200)
     
     hz_1_data = data(:,1);
     hz_10_data = data(:,2);
@@ -246,6 +219,7 @@ function plot_six(data,Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_
     hz_50_data = data(:,4);
     hz_100_data = data(:,5);
     hz_200_data = data(:,6);
+    hz_200_recovery = data(1:11,7);
 
     labels = ["1 Hz data", "10 Hz data", "20 Hz data", "50 Hz data", "100 Hz data", "200 Hz data"];
     
@@ -257,7 +231,7 @@ function plot_six(data,Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_
     Fused_200_norm = Fused_im_200(1) + Fused_m_200(1);
     
     figure 
-    subplot(3,2,1)
+    subplot(4,2,1)
     plot(hz_1_data,'-k')
     title('1 Hz')
     xlabel('Pulse #')
@@ -270,7 +244,7 @@ function plot_six(data,Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_
     plot(Fused_m_1/Fused_1_norm,'g^')
     legend(labels(1),'1 Hz Simulation','Low P Pool Fusion','High P Pool Fusion')
     
-    subplot(3,2,2)
+    subplot(4,2,2)
     plot(hz_10_data,'-k')
     title('10 Hz')
     xlabel('Pulse #')
@@ -283,7 +257,7 @@ function plot_six(data,Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_
     plot(Fused_m_10/Fused_10_norm,'g^')
     %legend(labels(2),'10 Hz Simulation','Low P Pool Fusion','High P Pool Fusion')
     
-    subplot(3,2,3)
+    subplot(4,2,3)
     plot(hz_20_data,'-k')
     title('20 Hz')
     xlabel('Pulse #')
@@ -296,7 +270,7 @@ function plot_six(data,Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_
     plot(Fused_m_20/Fused_20_norm,'g^')
     %legend(labels(3),'20 Hz Simulation','Low P Pool Fusion','High P Pool Fusion')
     
-    subplot(3,2,4)
+    subplot(4,2,4)
     plot(hz_50_data,'-k')
     title('50 Hz')
     xlabel('Pulse #')
@@ -309,7 +283,7 @@ function plot_six(data,Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_
     plot(Fused_m_50/Fused_50_norm,'g^')
     %legend(labels(4),'50 Hz Simulation','Low P Pool Fusion','High P Pool Fusion')
     
-    subplot(3,2,5)
+    subplot(4,2,5)
     plot(hz_100_data,'-k')
     title('100 Hz')
     xlabel('Pulse #')
@@ -321,8 +295,8 @@ function plot_six(data,Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_
     plot(Fused_im_100/Fused_100_norm,'rv')
     plot(Fused_m_100/Fused_100_norm,'g^')
     
-    subplot(3,2,6)
-    plot(hz_200_data,'-k')
+    subplot(4,2,6)
+    plot(hz_200_data(1:100),'-k')
     title('200 Hz')
     xlabel('Pulse #')
     ylabel('Peak EPSC')
@@ -332,6 +306,17 @@ function plot_six(data,Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_
     plot(hz_200,'ko','Markersize',5)
     plot(Fused_im_200/Fused_200_norm,'rv')
     plot(Fused_m_200/Fused_200_norm,'g^')
+    
+    subplot(4,2,7)
+    semilogx([10,20,50,100,200,500,1000,2000,5000,10000,20000],hz_200_recovery,'-k')
+    title('200 Hz Recovery')
+    xlabel('Time after Last Pulse (ms)')
+    ylabel('EPSC (norm)')
+    set(gca,'ylim',[0 1.2])
+    hold on
+    semilogx([10,20,50,100,200,500,1000,2000,5000,10000,20000],hz_200(101:111),'ko','Markersize',5)
+    semilogx([10,20,50,100,200,500,1000,2000,5000,10000,20000],Fused_im_200(101:111)/Fused_200_norm,'rv')
+    semilogx([10,20,50,100,200,500,1000,2000,5000,10000,20000],Fused_m_200(101:111)/Fused_200_norm,'g^')
 end
 
 function plot_one(data, stimulus_times)
