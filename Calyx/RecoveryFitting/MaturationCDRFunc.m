@@ -9,8 +9,6 @@ k_undocking = x(4);
 k_maturation = x(5); 
 k_dematuration = x(6); 
 
-%data = matfile('WT_data.mat').WT_data; %C_7 = 1
-%data = matfile('syt3KO_data.mat').syt3KO_data; %C_3 = 0
 data = matfile('DKO_data.mat').DKO_data; %C_7 = 0, C_3 = 0
 hz_1_data = data(:,1);
 hz_10_data = data(:,2);
@@ -25,6 +23,7 @@ k_off_3 = 0.05; %ms^-1  Hui
 k_on_7 = 7.333e3; %Knight
 k_off_7 = 1.1e-2;
 C_3 = 0;
+C_7 = 0;
 Ca_rest = 50e-9; %M
 
 t_SS = 10000; %ms
@@ -36,18 +35,73 @@ state_0 = [1; 0; 0; 0; 0]; %[empty; immature; mature; syt3; syt7]
 
 SS = state(end,:);
 
-[~, ~, hz_1, ~, ~, hz_10, ~, ~, hz_20, ~, ~, hz_50, ~, ~, hz_100, ~, ~, hz_200] = test6(p_mature, p_immature, k_docking, k_undocking, k_maturation, k_dematuration, SS);
+[~, ~, hz_1, ~, ~, hz_10, ~, ~, hz_20, ~, ~, hz_50, ~, ~, hz_100, ~, ~, hz_200] = test6(p_mature, p_immature, k_docking, k_undocking, k_maturation, k_dematuration, SS, C_3, C_7);
 
-err = sqrt(4*sum((hz_1(1:20) - hz_1_data(1:20)).^2 + (hz_10(1:20) - hz_10_data(1:20)).^2 + (hz_20(1:20) - hz_20_data(1:20)).^2 + (hz_50(1:20) - hz_50_data(1:20)).^2 + (hz_100(1:20) - hz_100_data(1:20)).^2 + (hz_200(1:20) - hz_200_data(1:20)).^2) + sum((hz_1(21:100) - hz_1_data(21:100)).^2 + (hz_10(21:100) - hz_10_data(21:100)).^2 + (hz_20(21:100) - hz_20_data(21:100)).^2 + (hz_50(21:100) - hz_50_data(21:100)).^2 + (hz_100(21:100) - hz_100_data(21:100)).^2 + (hz_200(21:100) - hz_200_data(21:100)).^2) + 50*sum((hz_200(end-10:end) - hz_200_recovery).^2));
-  
-function [ts, state, Fused_im, Fused_m, Ca_sim] = stim_sim(stimulus_times, max_time, p_mature, p_immature, k_docking, k_undocking, k_maturation, k_dematuration, SS)
+err_DKO = sqrt(4*sum((hz_1(1:20) - hz_1_data(1:20)).^2 + (hz_10(1:20) - hz_10_data(1:20)).^2 + (hz_20(1:20) - hz_20_data(1:20)).^2 + (hz_50(1:20) - hz_50_data(1:20)).^2 + (hz_100(1:20) - hz_100_data(1:20)).^2 + (hz_200(1:20) - hz_200_data(1:20)).^2) + sum((hz_1(21:100) - hz_1_data(21:100)).^2 + (hz_10(21:100) - hz_10_data(21:100)).^2 + (hz_20(21:100) - hz_20_data(21:100)).^2 + (hz_50(21:100) - hz_50_data(21:100)).^2 + (hz_100(21:100) - hz_100_data(21:100)).^2 + (hz_200(21:100) - hz_200_data(21:100)).^2) + 50*sum((hz_200(end-10:end) - hz_200_recovery).^2));
+
+%find error of syt3KO
+data = matfile('syt3KO_data.mat').syt3KO_data; %C_3 = 0
+hz_1_data = data(:,1);
+hz_10_data = data(:,2);
+hz_20_data = data(:,3);
+hz_50_data = data(:,4);
+hz_100_data = data(:,5);
+hz_200_data = data(:,6);
+hz_200_recovery = data(1:11,7);
+
+C_3 = 0;
+C_7 = 1;
+%SS doesn't change between DKO and syt3 KO
+
+[~, ~, hz_1, ~, ~, hz_10, ~, ~, hz_20, ~, ~, hz_50, ~, ~, hz_100, ~, ~, hz_200] = test6(p_mature, p_immature, k_docking, k_undocking, k_maturation, k_dematuration, SS, C_3, C_7);
+
+err_syt3KO = sqrt(4*sum((hz_1(1:20) - hz_1_data(1:20)).^2 + (hz_10(1:20) - hz_10_data(1:20)).^2 + (hz_20(1:20) - hz_20_data(1:20)).^2 + (hz_50(1:20) - hz_50_data(1:20)).^2 + (hz_100(1:20) - hz_100_data(1:20)).^2 + (hz_200(1:20) - hz_200_data(1:20)).^2) + sum((hz_1(21:100) - hz_1_data(21:100)).^2 + (hz_10(21:100) - hz_10_data(21:100)).^2 + (hz_20(21:100) - hz_20_data(21:100)).^2 + (hz_50(21:100) - hz_50_data(21:100)).^2 + (hz_100(21:100) - hz_100_data(21:100)).^2 + (hz_200(21:100) - hz_200_data(21:100)).^2) + 50*sum((hz_200(end-10:end) - hz_200_recovery).^2));
+
+data = matfile('syt7KO_data.mat').syt7KO_data; %C_7 = 0
+hz_1_data = data(:,1);
+hz_10_data = data(:,2);
+hz_20_data = data(:,3);
+hz_50_data = data(:,4);
+hz_100_data = data(:,5);
+hz_200_data = data(:,6);
+hz_200_recovery = data(1:11,7);
+
+C_3 = x(7);
+C_7 = 0;
+
+[t0,state] = ode15s(@(t,state) dSS(t,state,k_docking,k_undocking,k_maturation,k_dematuration,k_on_3,k_off_3,k_on_7,k_off_7,C_3,Ca_rest), [0 t_SS], state_0);
+
+SS = state(end,:);
+
+[~, ~, hz_1, ~, ~, hz_10, ~, ~, hz_20, ~, ~, hz_50, ~, ~, hz_100, ~, ~, hz_200] = test6(p_mature, p_immature, k_docking, k_undocking, k_maturation, k_dematuration, SS, C_3, C_7);
+
+err_syt7KO = sqrt(4*sum((hz_1(1:20) - hz_1_data(1:20)).^2 + (hz_10(1:20) - hz_10_data(1:20)).^2 + (hz_20(1:20) - hz_20_data(1:20)).^2 + (hz_50(1:20) - hz_50_data(1:20)).^2 + (hz_100(1:20) - hz_100_data(1:20)).^2 + (hz_200(1:20) - hz_200_data(1:20)).^2) + sum((hz_1(21:100) - hz_1_data(21:100)).^2 + (hz_10(21:100) - hz_10_data(21:100)).^2 + (hz_20(21:100) - hz_20_data(21:100)).^2 + (hz_50(21:100) - hz_50_data(21:100)).^2 + (hz_100(21:100) - hz_100_data(21:100)).^2 + (hz_200(21:100) - hz_200_data(21:100)).^2) + 50*sum((hz_200(end-10:end) - hz_200_recovery).^2));
+
+data = matfile('WT_data.mat').WT_data; %C_7 = 1
+hz_1_data = data(:,1);
+hz_10_data = data(:,2);
+hz_20_data = data(:,3);
+hz_50_data = data(:,4);
+hz_100_data = data(:,5);
+hz_200_data = data(:,6);
+hz_200_recovery = data(1:11,7);
+
+%C_3 = x(7); %already called above
+C_7 = 1;
+%SS is same as syt7KO
+
+[~, ~, hz_1, ~, ~, hz_10, ~, ~, hz_20, ~, ~, hz_50, ~, ~, hz_100, ~, ~, hz_200] = test6(p_mature, p_immature, k_docking, k_undocking, k_maturation, k_dematuration, SS, C_3, C_7);
+
+err_WT = sqrt(20*sum((hz_1(1:20) - hz_1_data(1:20)).^2 + (hz_10(1:20) - hz_10_data(1:20)).^2 + (hz_20(1:20) - hz_20_data(1:20)).^2 + (hz_50(1:20) - hz_50_data(1:20)).^2 + (hz_100(1:20) - hz_100_data(1:20)).^2 + (hz_200(1:20) - hz_200_data(1:20)).^2) + sum((hz_1(21:100) - hz_1_data(21:100)).^2 + (hz_10(21:100) - hz_10_data(21:100)).^2 + (hz_20(21:100) - hz_20_data(21:100)).^2 + (hz_50(21:100) - hz_50_data(21:100)).^2 + (hz_100(21:100) - hz_100_data(21:100)).^2 + (hz_200(21:100) - hz_200_data(21:100)).^2) + 20*sum((hz_200(end-10:end) - hz_200_recovery).^2));
+
+err = (err_DKO + err_syt3KO + err_syt7KO + err_WT)/4;
+
+function [ts, state, Fused_im, Fused_m, Ca_sim] = stim_sim(stimulus_times, max_time, p_mature, p_immature, k_docking, k_undocking, k_maturation, k_dematuration, SS, C_3, C_7)
 
     k_on_3 = 3e5; %M^-1ms^-1 Hui
     k_off_3 = 0.05; %ms^-1  Hui
     k_on_7 = 7.333e3; %Knight
     k_off_7 = 1.1e-2;
-    C_3 = 0;
-    C_7 = 1;
     delta_t = 1e-2; %ms
     
     state = SS;
@@ -63,9 +117,9 @@ function [ts, state, Fused_im, Fused_m, Ca_sim] = stim_sim(stimulus_times, max_t
     for i = 1:length(stim_delay)
 
         pre_stim = state(end,:);
-        post_stim = pre_stim + [pre_stim(2)*p_immature+pre_stim(3)*p_mature, -pre_stim(2)*p_immature, -pre_stim(3)*p_mature, 0, 0];
-        Fused_im(i) = pre_stim(2)*p_immature;
-        Fused_m(i) = pre_stim(3)*p_mature;
+        post_stim = pre_stim + [pre_stim(2)*p_immature*(1+C_7*pre_stim(5))+pre_stim(3)*p_mature*(1+C_7*pre_stim(5)), -pre_stim(2)*p_immature*(1+C_7*pre_stim(5)), -pre_stim(3)*p_mature*(1+C_7*pre_stim(5)), 0, 0];
+        Fused_im(i) = pre_stim(2)*p_immature*(1+C_7*pre_stim(5));
+        Fused_m(i) = pre_stim(3)*p_mature*(1+C_7*pre_stim(5));
         [t,out] = ode45(@(t,state) dState(t,state,k_docking,k_undocking,k_maturation,k_dematuration,k_on_3,k_off_3,k_on_7,k_off_7,C_3,Ca_sim), [ts(end) ts(end)+stim_delay(i)], post_stim);
 
         state = [state(1:end-1,:); out];
@@ -110,7 +164,7 @@ function Ca_sim = create_Ca_signal(stimulus_times, max_time)
 end
 
 
-function [Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_10, Fused_im_20, Fused_m_20, hz_20, Fused_im_50, Fused_m_50, hz_50, Fused_im_100, Fused_m_100, hz_100, Fused_im_200, Fused_m_200, hz_200] = test6(p_mature, p_immature, k_docking, k_undocking, k_maturation, k_dematuration, SS)
+function [Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_10, Fused_im_20, Fused_m_20, hz_20, Fused_im_50, Fused_m_50, hz_50, Fused_im_100, Fused_m_100, hz_100, Fused_im_200, Fused_m_200, hz_200] = test6(p_mature, p_immature, k_docking, k_undocking, k_maturation, k_dematuration, SS, C_3, C_7)
     
     stimulus_times_1 = linspace(0,1000*99,100); %100 stims 1hz
     stimulus_times_10 = linspace(0,100*99,100); %100 stims 10hz
@@ -121,32 +175,32 @@ function [Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_10, Fused_im_
     stimulus_times_200 = [stimulus_times_200, stimulus_times_200(end)+10, stimulus_times_200(end)+20, stimulus_times_200(end)+50, stimulus_times_200(end)+100, stimulus_times_200(end)+200, stimulus_times_200(end)+500, stimulus_times_200(end)+1000, stimulus_times_200(end)+2000, stimulus_times_200(end)+5000, stimulus_times_200(end)+10000, stimulus_times_200(end)+20000]; %recovery
 
     max_time_1 = stimulus_times_1(end) + stimulus_times_1(2)*30;
-    [~, ~, Fused_im_1, Fused_m_1,~] = stim_sim(stimulus_times_1, max_time_1, p_mature, p_immature, k_docking, k_undocking, k_maturation, k_dematuration, SS);
+    [~, ~, Fused_im_1, Fused_m_1,~] = stim_sim(stimulus_times_1, max_time_1, p_mature, p_immature, k_docking, k_undocking, k_maturation, k_dematuration, SS, C_3, C_7);
     Fused_1 = Fused_im_1 + Fused_m_1;
     hz_1 = Fused_1/Fused_1(1);
     
     max_time_10 = stimulus_times_10(end) + stimulus_times_10(2)*30;
-    [~, ~, Fused_im_10, Fused_m_10,~] = stim_sim(stimulus_times_10, max_time_10, p_mature, p_immature, k_docking, k_undocking, k_maturation, k_dematuration, SS);
+    [~, ~, Fused_im_10, Fused_m_10,~] = stim_sim(stimulus_times_10, max_time_10, p_mature, p_immature, k_docking, k_undocking, k_maturation, k_dematuration, SS, C_3, C_7);
     Fused_10 = Fused_im_10 + Fused_m_10;
     hz_10 = Fused_10/Fused_10(1);
     
     max_time_20 = stimulus_times_20(end) + stimulus_times_20(2)*30;
-    [~, ~, Fused_im_20, Fused_m_20,~] = stim_sim(stimulus_times_20, max_time_20, p_mature, p_immature, k_docking, k_undocking, k_maturation, k_dematuration, SS);
+    [~, ~, Fused_im_20, Fused_m_20,~] = stim_sim(stimulus_times_20, max_time_20, p_mature, p_immature, k_docking, k_undocking, k_maturation, k_dematuration, SS, C_3, C_7);
     Fused_20 = Fused_im_20 + Fused_m_20;
     hz_20 = Fused_20/Fused_20(1);
 
     max_time_50 = stimulus_times_50(end) + stimulus_times_50(2)*30;
-    [~, ~, Fused_im_50, Fused_m_50, ~] = stim_sim(stimulus_times_50, max_time_50, p_mature, p_immature, k_docking, k_undocking, k_maturation, k_dematuration, SS);
+    [~, ~, Fused_im_50, Fused_m_50, ~] = stim_sim(stimulus_times_50, max_time_50, p_mature, p_immature, k_docking, k_undocking, k_maturation, k_dematuration, SS, C_3, C_7);
     Fused_50 = Fused_im_50 + Fused_m_50;
     hz_50 = Fused_50/Fused_50(1);
     
     max_time_100 = stimulus_times_100(end) + stimulus_times_100(2)*100;
-    [~, ~, Fused_im_100, Fused_m_100, ~] = stim_sim(stimulus_times_100, max_time_100, p_mature, p_immature, k_docking, k_undocking, k_maturation, k_dematuration, SS);
+    [~, ~, Fused_im_100, Fused_m_100, ~] = stim_sim(stimulus_times_100, max_time_100, p_mature, p_immature, k_docking, k_undocking, k_maturation, k_dematuration, SS, C_3, C_7);
     Fused_100 = Fused_im_100 + Fused_m_100;
     hz_100 = Fused_100/Fused_100(1);
     
     max_time_200 = stimulus_times_200(end) + stimulus_times_200(2)*30;
-    [~, ~, Fused_im_200, Fused_m_200, ~] = stim_sim(stimulus_times_200, max_time_200, p_mature, p_immature, k_docking, k_undocking, k_maturation, k_dematuration, SS);
+    [~, ~, Fused_im_200, Fused_m_200, ~] = stim_sim(stimulus_times_200, max_time_200, p_mature, p_immature, k_docking, k_undocking, k_maturation, k_dematuration, SS, C_3, C_7);
     Fused_200 = Fused_im_200 + Fused_m_200;
     hz_200 = Fused_200/Fused_200(1);
 

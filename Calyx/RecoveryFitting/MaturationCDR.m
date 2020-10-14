@@ -19,7 +19,7 @@ global T_Ca_decay
 %global sigma
 global mu
 
-type = "syt7KO";
+type = "WT";
 
 if type == "WT"
     data = matfile('WT_data.mat').WT_data;
@@ -60,16 +60,16 @@ mu = 2*FWHM; %time at which Ca_spike is maximal (ms)
 % k_maturation = .000965;
 % k_dematuration = .0001;
 
-k_docking = .01;
-k_undocking = 0.0016;
-k_maturation = .00058;
-k_dematuration = 0.000054;
+k_docking = 0.0033;
+k_undocking = 0.00039;
+k_maturation = .00019;
+k_dematuration = .000045;
 
-p_immature = .19;
-p_mature = .65;
+p_immature = .15;
+p_mature = .53;
 
-C_3 = 1;
-C_7 = 0;
+C_3 = 1.3;
+C_7 = 1;
 
 Ca_rest = 50e-9; %M
 %Ca_spike = 2e-5; %M
@@ -123,9 +123,9 @@ function [ts, state, Fused_im, Fused_m, Ca_sim] = stim_sim(stimulus_times, max_t
     for i = 1:length(stim_delay)
 
         pre_stim = state(end,:);
-        post_stim = pre_stim + [pre_stim(2)*p_immature*(1+C_7*pre_stim(5))+pre_stim(3)*p_mature, -pre_stim(2)*p_immature*(1+C_7*pre_stim(5)), -pre_stim(3)*p_mature, 0, 0];
+        post_stim = pre_stim + [pre_stim(2)*p_immature*(1+C_7*pre_stim(5))+pre_stim(3)*p_mature*(1+C_7*pre_stim(5)), -pre_stim(2)*p_immature*(1+C_7*pre_stim(5)), -pre_stim(3)*p_mature*(1+C_7*pre_stim(5)), 0, 0];
         Fused_im(i) = pre_stim(2)*p_immature*(1+C_7*pre_stim(5));
-        Fused_m(i) = pre_stim(3)*p_mature;
+        Fused_m(i) = pre_stim(3)*p_mature*(1+C_7*pre_stim(5));
         [t,out] = ode45(@(t,state) dState(t,state,k_docking,k_undocking,k_maturation,k_dematuration,k_on_3,k_off_3,k_on_7,k_off_7,C_3,Ca_sim), [ts(end) ts(end)+stim_delay(i)], post_stim);
 
         state = [state(1:end-1,:); out];
