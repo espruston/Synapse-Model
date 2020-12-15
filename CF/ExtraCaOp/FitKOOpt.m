@@ -13,6 +13,3 @@ ms = MultiStart('FunctionTolerance',0.1,'StartPointsToRun','bounds-ineqs','UsePa
 [x,err] = run(ms,problem,1);
 
 disp(['Best fit was [', num2str(x(1)), ',', num2str(x(2)), ',', num2str(x(3)), ',', num2str(x(4)), ',', num2str(x(5)), '] with an error of ', num2str(err)])
-
-
-

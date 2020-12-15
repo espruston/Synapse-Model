@@ -13,4 +13,3 @@ opts = optimoptions('surrogateopt','CheckpointFile','checkfileRefill.mat','PlotF
 % [x,err] = run(ms,problem,1);
 
 disp(['Best fit was [', num2str(x(1)), ',', num2str(x(2)), ',', num2str(x(3)), ',', num2str(x(4)), ',', num2str(x(5)), ',', num2str(x(6)), '] with an error of ', num2str(err)])
-
