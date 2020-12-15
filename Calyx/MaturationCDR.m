@@ -42,7 +42,7 @@ hz_100_data = data(:,5);
 hz_200_data = data(:,6);
 
 %stimulus_times = [0 10];
-stimulus_times = linspace(0,5*99,100); %100 stims @ 200hz
+stimulus_times = linspace(0,50*99,100); %100 stims @ 20hz
 
 k_on_3 = 3e5; %M^-1ms^-1 Hui
 k_off_3 = 0.05; %ms^-1  Hui
@@ -59,21 +59,25 @@ mu = 2*FWHM; %time at which Ca_spike is maximal (ms)
 % k_maturation = .000965;
 % k_dematuration = .0001;
 
-k_docking = .015;
+k_docking = .00015;
 k_undocking = 0;
 k_maturation = .00012289;
-k_dematuration = 0.000022889;
+k_dematuration = 0.000022888;
 
+<<<<<<< HEAD
 p_immature = .0709;
+=======
+p_immature = .07;
+>>>>>>> a53a48ad605f5e7079211f5692ed359b348e35f1
 p_mature = .27;
 
 C_3 = 1;
-C_7 = 0;
+C_7 = 1;
 
-Ca_rest = 5e-8; %M
+Ca_rest = 50e-9; %M
 Ca_spike = 2e-5; %M
-Ca_residual = 250e-9; %M
-T_Ca_decay = 40; %ms
+Ca_residual = 500e-9; %M
+T_Ca_decay = 50; %ms
 
 delta_t = 1e-2; %ms
 
@@ -122,9 +126,9 @@ function [ts, state, Fused_im, Fused_m, Ca_sim] = stim_sim(stimulus_times, max_t
     for i = 1:length(stim_delay)
 
         pre_stim = state(end,:);
-        post_stim = pre_stim + [pre_stim(2)*p_immature+pre_stim(3)*p_mature, -pre_stim(2)*p_immature, -pre_stim(3)*p_mature, 0, 0];
+        post_stim = pre_stim + [pre_stim(2)*p_immature+pre_stim(3)*p_mature*(1+C_7*pre_stim(5)), -pre_stim(2)*p_immature, -pre_stim(3)*p_mature*(1+C_7*pre_stim(5)), 0, 0];
         Fused_im(i) = pre_stim(2)*p_immature;
-        Fused_m(i) = pre_stim(3)*p_mature;
+        Fused_m(i) = pre_stim(3)*p_mature*(1+C_7*pre_stim(5));
         [t,out] = ode45(@(t,state) dState(t,state,k_docking,k_undocking,k_maturation,k_dematuration,k_on_3,k_off_3,k_on_7,k_off_7,C_3,Ca_sim), [ts(end) ts(end)+stim_delay(i)], post_stim);
 
         state = [state(1:end-1,:); out];
@@ -137,6 +141,35 @@ function [ts, state, Fused_im, Fused_m, Ca_sim] = stim_sim(stimulus_times, max_t
 end
 
 
+% function Ca_sim = create_Ca_signal(stimulus_times, max_time)
+%     
+%     global Ca_rest
+%     global Ca_spike
+%     global Ca_residual
+%     global T_Ca_decay
+%     global delta_t
+%     global sigma
+%     global mu
+%     
+%     
+%     ts = linspace(0,max_time,max_time/delta_t + 1);
+%     Ca_sim = zeros(1,length(ts));
+%     Ca_sim = Ca_sim + Ca_rest;
+% 
+%     for t = 1:length(stimulus_times) %simulate calcium influx
+% 
+%         spike_start_index = round(stimulus_times(t)/delta_t) + 1; %if 1st stim is at t=0 index should be one, round is necessary due to IEEE fp returning scientific notation ocasionally
+%         spike_peak_index = round((stimulus_times(t)+mu)/delta_t) + 1;
+% 
+%         Ca_sim(spike_start_index:end) = Ca_sim(spike_start_index:end) + Ca_spike*exp(-1*((ts(1:end - spike_start_index + 1) - mu)/sigma).^2/2); %if 1st stim is at t=0 index should be one
+% 
+%         Ca_sim(spike_peak_index:end) = Ca_sim(spike_peak_index:end) + Ca_residual*exp(-1*ts(1:end - spike_peak_index + 1)/T_Ca_decay);    
+% 
+%     end
+% 
+% end
+
+%only simulate res. Ca
 function Ca_sim = create_Ca_signal(stimulus_times, max_time)
     
     global Ca_rest
@@ -157,7 +190,7 @@ function Ca_sim = create_Ca_signal(stimulus_times, max_time)
         spike_start_index = round(stimulus_times(t)/delta_t) + 1; %if 1st stim is at t=0 index should be one, round is necessary due to IEEE fp returning scientific notation ocasionally
         spike_peak_index = round((stimulus_times(t)+mu)/delta_t) + 1;
 
-        Ca_sim(spike_start_index:end) = Ca_sim(spike_start_index:end) + Ca_spike*exp(-1*((ts(1:end - spike_start_index + 1) - mu)/sigma).^2/2); %if 1st stim is at t=0 index should be one
+        %Ca_sim(spike_start_index:end) = Ca_sim(spike_start_index:end) + Ca_spike*exp(-1*((ts(1:end - spike_start_index + 1) - mu)/sigma).^2/2); %if 1st stim is at t=0 index should be one
 
         Ca_sim(spike_peak_index:end) = Ca_sim(spike_peak_index:end) + Ca_residual*exp(-1*ts(1:end - spike_peak_index + 1)/T_Ca_decay);    
 
@@ -413,4 +446,3 @@ function dydt = dState(t,state,k_docking,k_undocking,k_maturation,k_dematuration
     dydt(5,1) = (1-state(5))*k_on_7*Ca - state(5)*k_off_7;
     
 end
-

@@ -10,6 +10,7 @@ k_maturation = x(5);
 k_dematuration = x(6); 
 
 data = matfile('WT_data.mat').WT_data;
+%data = matfile('syt3KO_data.mat').syt3KO_data;
 hz_1_data = data(:,1);
 hz_10_data = data(:,2);
 hz_20_data = data(:,3);
@@ -22,7 +23,7 @@ k_off_3 = 0.05; %ms^-1  Hui
 k_on_7 = 7.333e3; %Knight
 k_off_7 = 1.1e-2;
 C_3 = 1;
-Ca_rest = 5e-8; %M
+Ca_rest = 50e-9; %M
 
 t_SS = 10000; %ms
 %ts_SS = linspace(0, t_SS, t_SS*delta_t + 1);
@@ -81,10 +82,10 @@ function Ca_sim = create_Ca_signal(stimulus_times, max_time)
     sigma = FWHM/2.35; %variance
     mu = 2*FWHM; %time at which Ca_spike is maximal (ms)
 
-    Ca_rest = 5e-8; %M
+    Ca_rest = 50e-9; %M
     Ca_spike = 2e-5; %M
-    Ca_residual = 250e-9; %M
-    T_Ca_decay = 40; %ms
+    Ca_residual = 500e-9; %M
+    T_Ca_decay = 50; %ms
     
     delta_t = 1e-2;
     
@@ -98,7 +99,7 @@ function Ca_sim = create_Ca_signal(stimulus_times, max_time)
         spike_start_index = round(stimulus_times(t)/delta_t) + 1; %if 1st stim is at t=0 index should be one, round is necessary due to IEEE fp returning scientific notation ocasionally
         spike_peak_index = round((stimulus_times(t)+mu)/delta_t) + 1;
 
-        Ca_sim(spike_start_index:end) = Ca_sim(spike_start_index:end) + Ca_spike*exp(-1*((ts(1:end - spike_start_index + 1) - mu)/sigma).^2/2); %if 1st stim is at t=0 index should be one
+        %Ca_sim(spike_start_index:end) = Ca_sim(spike_start_index:end) + Ca_spike*exp(-1*((ts(1:end - spike_start_index + 1) - mu)/sigma).^2/2); %if 1st stim is at t=0 index should be one
 
         Ca_sim(spike_peak_index:end) = Ca_sim(spike_peak_index:end) + Ca_residual*exp(-1*ts(1:end - spike_peak_index + 1)/T_Ca_decay);    
 
