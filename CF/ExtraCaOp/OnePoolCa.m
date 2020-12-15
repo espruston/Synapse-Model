@@ -77,7 +77,7 @@ set(gca,'xlim',[1 20])
 set(gca,'ylim',[0 1.2])
 hold on
 plot(hz_1,'ko','Markersize',5)
-legend({'Data','Simulation'},'Position',[0.14, 0.75, .1, .1])
+%legend({'Data','Simulation'},'Position',[0.14, 0.75, .1, .1])
 
 subplot(3,2,2)
 plot(CFDataWT(1:20,2),'-k')

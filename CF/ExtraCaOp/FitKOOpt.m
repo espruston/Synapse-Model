@@ -4,9 +4,9 @@ ub = [1, 0.01, 0.01, 100, 1e7];
 A = [];
 b = [];
 
-% opts = optimoptions('surrogateopt','CheckpointFile','checkfile.mat','PlotFcn','surrogateoptplot','UseParallel',true,'MaxTime',24*3600);
-% [x,err,exitflag,output] = surrogateopt(@OnePoolCaFunc,lb,ub,opts);
-% %[x,err,exitflag,output] = surrogateopt('checkfile.mat',opts);
+% opts = optimoptions('surrogateopt','CheckpointFile','checkfileKO.mat','PlotFcn','surrogateoptplot','UseParallel',true,'MaxTime',24*3600);
+% [x,err,exitflag,output] = surrogateopt(@FitKOFunc,lb,ub,opts);
+% %[x,err,exitflag,output] = surrogateopt('checkfileKO.mat',opts);
 
 problem = createOptimProblem('fmincon','objective',@FitKOFunc,'x0',x0,'lb',lb,'ub',ub,'Aineq',A,'bineq',b);
 ms = MultiStart('FunctionTolerance',0.1,'StartPointsToRun','bounds-ineqs','UseParallel',true,'MaxTime',600);

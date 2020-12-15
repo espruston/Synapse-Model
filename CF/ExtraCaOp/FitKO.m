@@ -1,10 +1,10 @@
-function err = FitKOFunc(x)
-
 CFData3KO = load('..\CFData3KO.mat').CFData3KO;
 CF1HzCa = load('..\CF1HzCa.mat').Ca_sim;
 CF10HzCa = load('..\CF10HzCa.mat').Ca_sim;
 CF20HzCa = load('..\CF20HzCa.mat').Ca_sim;
 CF50HzCa = load('..\CF50HzCa.mat').Ca_sim;
+
+x = [0.8,0.001,0.0001,20,3e6];
 
 p_release = x(1); 
 k_docking = x(2); 
@@ -32,7 +32,7 @@ t_SS = 10000; %ms
 state_0 = [1; 0; reserve_size]; %[empty pool; bound pool; reserve pool]
 
 %Syt3 KO
-[t0,state] = ode15s(@(t,state) dSS(t, state, k_docking, k_undocking, Ca_rest*C_Ca, reserve_size), [0 t_SS], state_0);
+[t0,state] = ode45(@(t,state) dSS(t, state, k_docking, k_undocking, Ca_rest*C_Ca, reserve_size), [0 t_SS], state_0);
 
 SS = state(end,:);
 
@@ -52,6 +52,62 @@ err_3KO = sqrt(sum((hz_1 - CFData3KO(1:20,1)).^2 + (hz_10 - CFData3KO(1:20,2)).^
 
 err = err_3KO;
 
+rec = [50 100 200 350 500 750 1000 2000 5000 10000];
+
+figure('Name','Syt3 KO Simulations','NumberTitle','off')
+subplot(3,2,1)
+plot(CFData3KO(1:20,1),'-k')
+title('1 Hz')
+xlabel('Pulse #')
+ylabel('Peak EPSC')
+set(gca,'xlim',[1 20])
+set(gca,'ylim',[0 1.2])
+hold on
+plot(hz_1,'ko','Markersize',5)
+%legend({'Data','Simulation'},'Position',[0.14, 0.75, .1, .1])
+
+subplot(3,2,2)
+plot(CFData3KO(1:20,2),'-k')
+title('10 Hz')
+xlabel('Pulse #')
+ylabel('Peak EPSC')
+set(gca,'xlim',[1 20])
+set(gca,'ylim',[0 1])
+hold on
+plot(hz_10,'ko','Markersize',5)
+
+subplot(3,2,3)
+plot(CFData3KO(1:20,3),'-k')
+title('20 Hz')
+xlabel('Pulse #')
+ylabel('Peak EPSC')
+set(gca,'xlim',[1 20])
+set(gca,'ylim',[0 1.2])
+hold on
+plot(hz_20,'ko','Markersize',5)
+
+subplot(3,2,4)
+plot(CFData3KO(1:20,4),'-k')
+title('50 Hz')
+xlabel('Pulse #')
+ylabel('Peak EPSC')
+set(gca,'xlim',[1 20])
+set(gca,'ylim',[0 1.2])
+hold on
+plot(hz_50(1:20),'ko','Markersize',5)
+
+subplot(3,2,5)
+semilogx(rec,CFData3KO(21:30,4),'-k')
+title('50 Hz Recovery')
+xlabel('t (ms)')
+ylabel('Peak EPSC')
+set(gca,'xlim',[50 10000])
+set(gca,'ylim',[0 1.2])
+hold on
+semilogx(rec,hz_50(21:30),'ko','Markersize',5)
+
+disp(err)
+
 function [ts, state, Fused] = stim_sim(stimulus_times, max_time, p_release, k_docking, k_undocking, Ca, SS, reserve_size)
 
     delta_t = 1e-2; %ms
@@ -69,7 +125,7 @@ function [ts, state, Fused] = stim_sim(stimulus_times, max_time, p_release, k_do
         pre_stim = state(end,:);
         post_stim = pre_stim + [pre_stim(2)*p_release, -pre_stim(2)*p_release, 0];
         Fused(i) = pre_stim(2)*p_release;  
-        [t,out] = ode15s(@(t,state) dState(t, state, k_docking, k_undocking, Ca(1,:), reserve_size), [ts(end) ts(end)+stim_delay(i)], post_stim);
+        [t,out] = ode45(@(t,state) dState(t, state, k_docking, k_undocking, Ca(1,:), reserve_size), [ts(end) ts(end)+stim_delay(i)], post_stim);
 
         state = [state(1:end-1,:); out];
 
@@ -83,7 +139,7 @@ function [ts, state, Fused] = stim_sim(stimulus_times, max_time, p_release, k_do
         
         for i = 1:length(Recovery)
             
-            [t,out] = ode15s(@(t,state) dState(t, state, k_docking, k_undocking, Ca(i,:), reserve_size), stimulus_times(end)+[0 Recovery(i)], post_stim);
+            [t,out] = ode45(@(t,state) dState(t, state, k_docking, k_undocking, Ca(i,:), reserve_size), stimulus_times(end)+[0 Recovery(i)], post_stim);
             pre_stim = out(end,:);
             Fused_rec(i) = pre_stim(2)*p_release;
        
@@ -109,7 +165,5 @@ function dydt = dState(t,state,k_docking,k_undocking,Ca,reserve_size)
 dydt(1,1) = -state(1)*(state(3)/reserve_size)*k_docking*(1+Ca(round(t/.01)+1)) + state(2)*k_undocking;
 dydt(2,1) = -dydt(1,1);
 dydt(3,1) = dydt(1,1);
-
-end
 
 end
