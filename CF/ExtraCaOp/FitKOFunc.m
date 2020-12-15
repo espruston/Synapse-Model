@@ -1,4 +1,4 @@
-function err = FitKO(x)
+function err = FitKOFunc(x)
 
 CFData3KO = load('..\CFData3KO.mat').CFData3KO;
 CF1HzCa = load('..\CF1HzCa.mat').Ca_sim;
