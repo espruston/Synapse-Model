@@ -6,10 +6,10 @@ global k_maturation
 global k_dematuration
 global delta_t
 global SS
-% global k_on_3
-% global k_off_3
-% global k_on_7
-% global k_off_7
+global k_on_3
+global k_off_3
+global k_on_7
+global k_off_7
 global C_3
 global C_7
 global Ca_rest
@@ -45,8 +45,6 @@ hz_200_data = data(:,6);
 stimulus_times = linspace(0,5*99,100); %100 stims @ 200hz
 
 k_on_3 = 3e5; %M^-1ms^-1 Hui
-%k_on_3 = 3e4; %M^-1ms^-1
-%k_on_3 = 0; %syt3 KO
 k_off_3 = 0.05; %ms^-1  Hui
 k_on_7 = 7.333e3; %Knight
 k_off_7 = 1.1e-2;
@@ -66,8 +64,8 @@ k_undocking = 0;
 k_maturation = .00012289;
 k_dematuration = 0.000022889;
 
-p_immature = .27;
-p_mature = .0709;
+p_immature = .0709;
+p_mature = .27;
 
 C_3 = 1;
 C_7 = 0;
@@ -92,7 +90,7 @@ SS = state(end,:);
 
 plot_six(data,Fused_im_1, Fused_m_1, hz_1, Fused_im_10, Fused_m_10, hz_10, Fused_im_20, Fused_m_20, hz_20, Fused_im_50, Fused_m_50, hz_50, Fused_im_100, Fused_m_100, hz_100, Fused_im_200, Fused_m_200, hz_200);
 
-%plot_one(data,stimulus_times)
+plot_one(data,stimulus_times)
     
 function [ts, state, Fused_im, Fused_m, Ca_sim] = stim_sim(stimulus_times, max_time)
 
