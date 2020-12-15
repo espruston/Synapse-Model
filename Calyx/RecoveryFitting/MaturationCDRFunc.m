@@ -37,7 +37,7 @@ SS = state(end,:);
 
 [~, ~, hz_1, ~, ~, hz_10, ~, ~, hz_20, ~, ~, hz_50, ~, ~, hz_100, ~, ~, hz_200] = test6(p_mature, p_immature, k_docking, k_undocking, k_maturation, k_dematuration, SS, C_3, C_7);
 
-err_DKO = sqrt(4*sum((hz_1(1:20) - hz_1_data(1:20)).^2 + (hz_10(1:20) - hz_10_data(1:20)).^2 + (hz_20(1:20) - hz_20_data(1:20)).^2 + (hz_50(1:20) - hz_50_data(1:20)).^2 + (hz_100(1:20) - hz_100_data(1:20)).^2 + (hz_200(1:20) - hz_200_data(1:20)).^2) + sum((hz_1(21:100) - hz_1_data(21:100)).^2 + (hz_10(21:100) - hz_10_data(21:100)).^2 + (hz_20(21:100) - hz_20_data(21:100)).^2 + (hz_50(21:100) - hz_50_data(21:100)).^2 + (hz_100(21:100) - hz_100_data(21:100)).^2 + (hz_200(21:100) - hz_200_data(21:100)).^2) + 50*sum((hz_200(end-10:end) - hz_200_recovery).^2));
+err_DKO = sqrt(20*sum((hz_1(1:20) - hz_1_data(1:20)).^2 + (hz_10(1:20) - hz_10_data(1:20)).^2 + (hz_20(1:20) - hz_20_data(1:20)).^2 + (hz_50(1:20) - hz_50_data(1:20)).^2 + (hz_100(1:20) - hz_100_data(1:20)).^2 + (hz_200(1:20) - hz_200_data(1:20)).^2) + sum((hz_1(21:100) - hz_1_data(21:100)).^2 + (hz_10(21:100) - hz_10_data(21:100)).^2 + (hz_20(21:100) - hz_20_data(21:100)).^2 + (hz_50(21:100) - hz_50_data(21:100)).^2 + (hz_100(21:100) - hz_100_data(21:100)).^2 + (hz_200(21:100) - hz_200_data(21:100)).^2) + 20*sum((hz_200(end-10:end) - hz_200_recovery).^2));
 
 %find error of syt3KO
 data = matfile('syt3KO_data.mat').syt3KO_data; %C_3 = 0
@@ -55,7 +55,7 @@ C_7 = 1;
 
 [~, ~, hz_1, ~, ~, hz_10, ~, ~, hz_20, ~, ~, hz_50, ~, ~, hz_100, ~, ~, hz_200] = test6(p_mature, p_immature, k_docking, k_undocking, k_maturation, k_dematuration, SS, C_3, C_7);
 
-err_syt3KO = sqrt(4*sum((hz_1(1:20) - hz_1_data(1:20)).^2 + (hz_10(1:20) - hz_10_data(1:20)).^2 + (hz_20(1:20) - hz_20_data(1:20)).^2 + (hz_50(1:20) - hz_50_data(1:20)).^2 + (hz_100(1:20) - hz_100_data(1:20)).^2 + (hz_200(1:20) - hz_200_data(1:20)).^2) + sum((hz_1(21:100) - hz_1_data(21:100)).^2 + (hz_10(21:100) - hz_10_data(21:100)).^2 + (hz_20(21:100) - hz_20_data(21:100)).^2 + (hz_50(21:100) - hz_50_data(21:100)).^2 + (hz_100(21:100) - hz_100_data(21:100)).^2 + (hz_200(21:100) - hz_200_data(21:100)).^2) + 50*sum((hz_200(end-10:end) - hz_200_recovery).^2));
+err_syt3KO = sqrt(20*sum((hz_1(1:20) - hz_1_data(1:20)).^2 + (hz_10(1:20) - hz_10_data(1:20)).^2 + (hz_20(1:20) - hz_20_data(1:20)).^2 + (hz_50(1:20) - hz_50_data(1:20)).^2 + (hz_100(1:20) - hz_100_data(1:20)).^2 + (hz_200(1:20) - hz_200_data(1:20)).^2) + sum((hz_1(21:100) - hz_1_data(21:100)).^2 + (hz_10(21:100) - hz_10_data(21:100)).^2 + (hz_20(21:100) - hz_20_data(21:100)).^2 + (hz_50(21:100) - hz_50_data(21:100)).^2 + (hz_100(21:100) - hz_100_data(21:100)).^2 + (hz_200(21:100) - hz_200_data(21:100)).^2) + 20*sum((hz_200(end-10:end) - hz_200_recovery).^2));
 
 data = matfile('syt7KO_data.mat').syt7KO_data; %C_7 = 0
 hz_1_data = data(:,1);
@@ -75,7 +75,7 @@ SS = state(end,:);
 
 [~, ~, hz_1, ~, ~, hz_10, ~, ~, hz_20, ~, ~, hz_50, ~, ~, hz_100, ~, ~, hz_200] = test6(p_mature, p_immature, k_docking, k_undocking, k_maturation, k_dematuration, SS, C_3, C_7);
 
-err_syt7KO = sqrt(4*sum((hz_1(1:20) - hz_1_data(1:20)).^2 + (hz_10(1:20) - hz_10_data(1:20)).^2 + (hz_20(1:20) - hz_20_data(1:20)).^2 + (hz_50(1:20) - hz_50_data(1:20)).^2 + (hz_100(1:20) - hz_100_data(1:20)).^2 + (hz_200(1:20) - hz_200_data(1:20)).^2) + sum((hz_1(21:100) - hz_1_data(21:100)).^2 + (hz_10(21:100) - hz_10_data(21:100)).^2 + (hz_20(21:100) - hz_20_data(21:100)).^2 + (hz_50(21:100) - hz_50_data(21:100)).^2 + (hz_100(21:100) - hz_100_data(21:100)).^2 + (hz_200(21:100) - hz_200_data(21:100)).^2) + 50*sum((hz_200(end-10:end) - hz_200_recovery).^2));
+err_syt7KO = sqrt(20*sum((hz_1(1:20) - hz_1_data(1:20)).^2 + (hz_10(1:20) - hz_10_data(1:20)).^2 + (hz_20(1:20) - hz_20_data(1:20)).^2 + (hz_50(1:20) - hz_50_data(1:20)).^2 + (hz_100(1:20) - hz_100_data(1:20)).^2 + (hz_200(1:20) - hz_200_data(1:20)).^2) + sum((hz_1(21:100) - hz_1_data(21:100)).^2 + (hz_10(21:100) - hz_10_data(21:100)).^2 + (hz_20(21:100) - hz_20_data(21:100)).^2 + (hz_50(21:100) - hz_50_data(21:100)).^2 + (hz_100(21:100) - hz_100_data(21:100)).^2 + (hz_200(21:100) - hz_200_data(21:100)).^2) + 20*sum((hz_200(end-10:end) - hz_200_recovery).^2));
 
 data = matfile('WT_data.mat').WT_data; %C_7 = 1
 hz_1_data = data(:,1);

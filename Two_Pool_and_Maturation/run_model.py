@@ -93,14 +93,14 @@ if __name__ == "__main__":
 
     #output = Skyler_dual_sensor(K_D_1, K_D_7, k_on_1, k_on_7, k_off_1, k_off_7, Ca_rest, Ca_residual, T_Ca_decay, Ca_spike, FWHM, delta_t, max_time, stimulus_times)
 
-    #output = three_sensor(K_D_1, K_D_3, K_D_7, k_on_1, k_on_3, k_on_7, k_off_1, k_off_3, k_off_7, Ca_rest, Ca_residual, T_Ca_decay, Ca_spike, FWHM, delta_t, max_time, stimulus_times)
+    output = three_sensor(K_D_1, K_D_3, K_D_7, k_on_1, k_on_3, k_on_7, k_off_1, k_off_3, k_off_7, Ca_rest, Ca_residual, T_Ca_decay, Ca_spike, FWHM, delta_t, max_time, stimulus_times)
 
     size_1 = .32
     size_2 = 1 - size_1
     k_1_basal = .09
     k_2_basal = .2
 
-    output = two_pool_three_sensor(size_1, size_2, k_1_basal, k_2_basal, K_D_1, K_D_3, K_D_7, k_on_1, k_on_3, k_on_7, k_off_1, k_off_3, k_off_7, Ca_rest, Ca_residual, T_Ca_decay, Ca_spike, FWHM, delta_t, max_time, stimulus_times)
+    #output = two_pool_three_sensor(size_1, size_2, k_1_basal, k_2_basal, K_D_1, K_D_3, K_D_7, k_on_1, k_on_3, k_on_7, k_off_1, k_off_3, k_off_7, Ca_rest, Ca_residual, T_Ca_decay, Ca_spike, FWHM, delta_t, max_time, stimulus_times)
 
     # plt.plot(output.ts, output.Ca)
     # plt.ylabel("Ca concentration (uM)")
