@@ -5,7 +5,7 @@ Ca_spike = 22.5e-6;
 FWHM = .5;
 mu = 2*FWHM;
 sigma = FWHM/2.35;
-delta_t = 0.01;
+delta_t = 0.1;
 
 %make 1hz
 stimulus_times = linspace(0,1000*19,20);
@@ -22,13 +22,20 @@ for i = 1
 
         spike_start_index = round(stimulus_times_2(t)/delta_t) + 1; %if 1st stim is at t=0 index should be one, round is necessary due to IEEE fp returning scientific notation ocasionally
         spike_peak_index = round((stimulus_times_2(t)+mu)/delta_t) + 1;
-
-        Ca_sim(i,spike_start_index:end) = Ca_sim(i,spike_start_index:end) + Ca_spike*exp(-1*((ts(1:end - spike_start_index + 1) - mu)/sigma).^2/2); %if 1st stim is at t=0 index should be one
-
-        Ca_sim(i,spike_peak_index:end) = Ca_sim(i,spike_peak_index:end) + Ca_residual*exp(-1*ts(1:end - spike_peak_index + 1)/T_Ca_decay); 
+        
+        Ca_sim(i,spike_peak_index:end) = (Ca_sim(i,spike_peak_index) + Ca_residual - Ca_rest)*exp(-1*ts(1:end - spike_peak_index + 1)/T_Ca_decay)+Ca_rest; 
+        
     end
+%     for t = 1:length(stimulus_times_2) %simulate calcium influx
+% 
+%         spike_start_index = round(stimulus_times_2(t)/delta_t) + 1; %if 1st stim is at t=0 index should be one, round is necessary due to IEEE fp returning scientific notation ocasionally
+%         spike_peak_index = round((stimulus_times_2(t)+mu)/delta_t) + 1;
+% 
+%         Ca_sim(i,spike_start_index:end) = Ca_sim(i,spike_start_index:end) + Ca_spike*exp(-1*((ts(1:end - spike_start_index + 1) - mu)/sigma).^2/2); %if 1st stim is at t=0 index should be one
+%         
+%     end
 end
-semilogy(ts,Ca_sim);
+semilogy(ts,Ca_sim(round(ts/.1)+1));
 save('CF1HzCa.mat','Ca_sim');
 
 %make 10hz
@@ -46,13 +53,20 @@ for i = 1
 
         spike_start_index = round(stimulus_times_2(t)/delta_t) + 1; %if 1st stim is at t=0 index should be one, round is necessary due to IEEE fp returning scientific notation ocasionally
         spike_peak_index = round((stimulus_times_2(t)+mu)/delta_t) + 1;
-
-        Ca_sim(i,spike_start_index:end) = Ca_sim(i,spike_start_index:end) + Ca_spike*exp(-1*((ts(1:end - spike_start_index + 1) - mu)/sigma).^2/2); %if 1st stim is at t=0 index should be one
-
-        Ca_sim(i,spike_peak_index:end) = Ca_sim(i,spike_peak_index:end) + Ca_residual*exp(-1*ts(1:end - spike_peak_index + 1)/T_Ca_decay); 
+        
+        Ca_sim(i,spike_peak_index:end) = (Ca_sim(i,spike_peak_index) + Ca_residual - Ca_rest)*exp(-1*ts(1:end - spike_peak_index + 1)/T_Ca_decay)+Ca_rest; 
+        
     end
+%     for t = 1:length(stimulus_times_2) %simulate calcium influx
+% 
+%         spike_start_index = round(stimulus_times_2(t)/delta_t) + 1; %if 1st stim is at t=0 index should be one, round is necessary due to IEEE fp returning scientific notation ocasionally
+%         spike_peak_index = round((stimulus_times_2(t)+mu)/delta_t) + 1;
+% 
+%         Ca_sim(i,spike_start_index:end) = Ca_sim(i,spike_start_index:end) + Ca_spike*exp(-1*((ts(1:end - spike_start_index + 1) - mu)/sigma).^2/2); %if 1st stim is at t=0 index should be one
+%         
+%     end
 end
-semilogy(ts,Ca_sim);
+semilogy(ts,Ca_sim(round(ts/.1)+1));
 save('CF10HzCa.mat','Ca_sim');
 
 %make 20hz
@@ -70,13 +84,20 @@ for i = 1
 
         spike_start_index = round(stimulus_times_2(t)/delta_t) + 1; %if 1st stim is at t=0 index should be one, round is necessary due to IEEE fp returning scientific notation ocasionally
         spike_peak_index = round((stimulus_times_2(t)+mu)/delta_t) + 1;
-
-        Ca_sim(i,spike_start_index:end) = Ca_sim(i,spike_start_index:end) + Ca_spike*exp(-1*((ts(1:end - spike_start_index + 1) - mu)/sigma).^2/2); %if 1st stim is at t=0 index should be one
-
-        Ca_sim(i,spike_peak_index:end) = Ca_sim(i,spike_peak_index:end) + Ca_residual*exp(-1*ts(1:end - spike_peak_index + 1)/T_Ca_decay); 
+        
+        Ca_sim(i,spike_peak_index:end) = (Ca_sim(i,spike_peak_index) + Ca_residual - Ca_rest)*exp(-1*ts(1:end - spike_peak_index + 1)/T_Ca_decay)+Ca_rest; 
+        
     end
+%     for t = 1:length(stimulus_times_2) %simulate calcium influx
+% 
+%         spike_start_index = round(stimulus_times_2(t)/delta_t) + 1; %if 1st stim is at t=0 index should be one, round is necessary due to IEEE fp returning scientific notation ocasionally
+%         spike_peak_index = round((stimulus_times_2(t)+mu)/delta_t) + 1;
+% 
+%         Ca_sim(i,spike_start_index:end) = Ca_sim(i,spike_start_index:end) + Ca_spike*exp(-1*((ts(1:end - spike_start_index + 1) - mu)/sigma).^2/2); %if 1st stim is at t=0 index should be one
+%         
+%     end
 end
-semilogy(ts,Ca_sim);
+semilogy(ts,Ca_sim(round(ts/.1)+1));
 save('CF20HzCa.mat','Ca_sim');
 
 %make 50hz w/50hz rec
@@ -96,11 +117,18 @@ for i = 1:length(Recovery)
 
         spike_start_index = round(stimulus_times_2(t)/delta_t) + 1; %if 1st stim is at t=0 index should be one, round is necessary due to IEEE fp returning scientific notation ocasionally
         spike_peak_index = round((stimulus_times_2(t)+mu)/delta_t) + 1;
-
-        Ca_sim(i,spike_start_index:end) = Ca_sim(i,spike_start_index:end) + Ca_spike*exp(-1*((ts(1:end - spike_start_index + 1) - mu)/sigma).^2/2); %if 1st stim is at t=0 index should be one
-
-        Ca_sim(i,spike_peak_index:end) = Ca_sim(i,spike_peak_index:end) + Ca_residual*exp(-1*ts(1:end - spike_peak_index + 1)/T_Ca_decay); 
+        
+        Ca_sim(i,spike_peak_index:end) = (Ca_sim(i,spike_peak_index) + Ca_residual - Ca_rest)*exp(-1*ts(1:end - spike_peak_index + 1)/T_Ca_decay)+Ca_rest; 
+        
     end
+%     for t = 1:length(stimulus_times_2) %simulate calcium influx
+% 
+%         spike_start_index = round(stimulus_times_2(t)/delta_t) + 1; %if 1st stim is at t=0 index should be one, round is necessary due to IEEE fp returning scientific notation ocasionally
+%         spike_peak_index = round((stimulus_times_2(t)+mu)/delta_t) + 1;
+% 
+%         Ca_sim(i,spike_start_index:end) = Ca_sim(i,spike_start_index:end) + Ca_spike*exp(-1*((ts(1:end - spike_start_index + 1) - mu)/sigma).^2/2); %if 1st stim is at t=0 index should be one
+%         
+%     end
 end
-semilogy(ts,Ca_sim);
+semilogy(ts,Ca_sim(round(ts/.1)+1));
 save('CF50HzCa.mat','Ca_sim');
