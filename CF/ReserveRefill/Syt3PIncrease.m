@@ -9,9 +9,8 @@ CF10HzSyt3 = load('..\CF10HzSyt3.mat').Syt3;
 CF20HzSyt3 = load('..\CF20HzSyt3.mat').Syt3;
 CF50HzSyt3 = load('..\CF50HzSyt3.mat').Syt3;
 
-%x = [0.3,0.0030281,0.001,5,0.003,1];
 %x = [0.70303,0.0033015,0.00010035,6.7483,0.0001,0]; %KO best fit 1/13/2021 err = 0.69845
-x = [0.69133,0.0030281,0.00020113,14.1101,1.9541e-05,8.9497]; %best fit 2/11/21 cost = 0.83658
+x = [0.69133,0.0030281,0.00020113,14.1101,1.9541e-05,.5]; %best fit 2/11/21 cost = 0.83658
 
 p_release = x(1); 
 k_docking = x(2); 
@@ -38,7 +37,7 @@ t_SS = 10000; %ms
 state_0 = [1; 0; reserve_size]; %[empty pool; bound pool; reserve pool]
 
 %WT
-[~,state] = ode113(@(t,state) dSS(t, state, k_docking, k_undocking, reserve_size, k_refill, C_3*CF1HzSyt3(1)), [0 t_SS], state_0);
+[~,state] = ode113(@(t,state) dSS(t, state, k_docking, k_undocking, reserve_size, k_refill), [0 t_SS], state_0);
 
 SS_WT = state(end,:);
 
@@ -58,7 +57,7 @@ err_WT = sqrt(2*sum((hz_1_WT(1:5) - CFDataWT(1:5,1)).^2 + (hz_10_WT(1:5) - CFDat
 
 %KO
 C_3 = 0;
-[t0,state] = ode113(@(t,state) dSS(t, state, k_docking, k_undocking, reserve_size, k_refill, C_3*CF1HzSyt3(1)), [0 t_SS], state_0);
+[t0,state] = ode113(@(t,state) dSS(t, state, k_docking, k_undocking, reserve_size, k_refill), [0 t_SS], state_0);
 
 SS_KO = state(end,:);
 
@@ -81,158 +80,6 @@ err = (err_WT + err_KO)/2;
 cost = err + abs(err_WT - err_KO)/10;
 
 disp(['Cost = ', num2str(cost), ', average error = ', num2str(err), ', WT error = ', num2str(err_WT), ', KO error = ', num2str(err_KO)])
-
-%plot Ca and Syts
-figure('Name','Ca & Syt3 Simulation (WT)','NumberTitle','off')
-subplot(4,2,1)
-semilogy(ts_1_WT,CF1HzCa(round(ts_1_WT/.1)+1))
-title('1 Hz Ca')
-xlabel('time (ms)')
-ylabel('Ca Conc. (M)')
-
-ax = gca;
-ax.XRuler.Exponent = 0;
-
-subplot(4,2,2)
-plot(ts_1_WT,CF1HzSyt3(round(ts_1_WT/.1)+1))
-title('1 Hz Syt3')
-xlabel('time (ms)')
-ylabel('Fraction Bound Syt3')
-set(gca,'ylim',[0 1])
-
-ax = gca;
-ax.XRuler.Exponent = 0;
-
-subplot(4,2,3)
-semilogy(ts_10_WT,CF10HzCa(round(ts_10_WT/.1)+1))
-title('10 Hz Ca')
-xlabel('time (ms)')
-ylabel('Ca Conc. (M)')
-
-subplot(4,2,4)
-plot(ts_10_WT,CF10HzSyt3(round(ts_10_WT/.1)+1))
-title('10 Hz Syt3')
-xlabel('time (ms)')
-ylabel('Fraction Bound Syt3')
-set(gca,'ylim',[0 1])
-
-subplot(4,2,5)
-semilogy(ts_20_WT,CF20HzCa(round(ts_20_WT/.1)+1))
-title('20 Hz Ca')
-xlabel('time (ms)')
-ylabel('Ca Conc. (M)')
-
-subplot(4,2,6)
-plot(ts_20_WT,CF20HzSyt3(round(ts_20_WT/.1)+1))
-title('20 Hz Syt3')
-xlabel('time (ms)')
-ylabel('Fraction Bound Syt3')
-set(gca,'ylim',[0 1])
-
-subplot(4,2,7)
-semilogy(ts_50_WT,CF50HzCa(1,round(ts_50_WT/.1)+1))
-title('50 Hz Ca')
-xlabel('time (ms)')
-ylabel('Ca Conc. (M)')
-
-subplot(4,2,8)
-plot(ts_50_WT,CF50HzSyt3(1,round(ts_50_WT/.1)+1))
-title('50 Hz Syt3')
-xlabel('time (ms)')
-ylabel('Fraction Bound Syt3')
-set(gca,'ylim',[0 1])
-
-
-%state plots
-figure('Name','State Simulations','NumberTitle','off')
-subplot(4,2,1)
-plot(ts_1_WT,state_1_WT(:,1),'color',[255, 165, 0]/255)
-title('WT 1 Hz')
-xlabel('time (ms)')
-ylabel('Value')
-set(gca,'ylim',[0 reserve_size])
-hold on
-plot(ts_1_WT,state_1_WT(:,2),'-b')
-plot(ts_1_WT,state_1_WT(:,3),'-k')
-
-ax = gca;
-ax.XRuler.Exponent = 0;
-
-subplot(4,2,3)
-plot(ts_10_WT,state_10_WT(:,1),'color',[255, 165, 0]/255)
-title('WT 10 Hz')
-xlabel('time (ms)')
-ylabel('Value')
-set(gca,'ylim',[0 reserve_size])
-hold on
-plot(ts_10_WT,state_10_WT(:,2),'-b')
-plot(ts_10_WT,state_10_WT(:,3),'-k')
-
-subplot(4,2,5)
-plot(ts_20_WT,state_20_WT(:,1),'color',[255, 165, 0]/255)
-title('WT 20 Hz')
-xlabel('time (ms)')
-ylabel('Value')
-set(gca,'ylim',[0 reserve_size])
-hold on
-plot(ts_20_WT,state_20_WT(:,2),'-b')
-plot(ts_20_WT,state_20_WT(:,3),'-k')
-
-subplot(4,2,7)
-plot(ts_50_WT,state_50_WT(:,1),'color',[255, 165, 0]/255)
-title('WT 50 Hz')
-xlabel('time (ms)')
-ylabel('Value')
-set(gca,'ylim',[0 reserve_size])
-hold on
-plot(ts_50_WT,state_50_WT(:,2),'-b')
-plot(ts_50_WT,state_50_WT(:,3),'-k')
-
-subplot(4,2,2)
-plot(ts_1_KO,state_1_KO(:,1),'color',[255, 165, 0]/255)
-title('KO 1 Hz')
-xlabel('time (ms)')
-ylabel('Value')
-set(gca,'ylim',[0 reserve_size])
-hold on
-plot(ts_1_KO,state_1_KO(:,2),'-b')
-plot(ts_1_KO,state_1_KO(:,3),'-k')
-
-ax = gca;
-ax.XRuler.Exponent = 0;
-
-legend({'Empty Sites','Filled Sites','Reserve Vesicles'},'Location','Best')
-
-subplot(4,2,4)
-plot(ts_10_KO,state_10_KO(:,1),'color',[255, 165, 0]/255)
-title('KO 10 Hz')
-xlabel('time (ms)')
-ylabel('Value')
-set(gca,'ylim',[0 reserve_size])
-hold on
-plot(ts_10_KO,state_10_KO(:,2),'-b')
-plot(ts_10_KO,state_10_KO(:,3),'-k')
-
-subplot(4,2,6)
-plot(ts_20_KO,state_20_KO(:,1),'color',[255, 165, 0]/255)
-title('KO 20 Hz')
-xlabel('time (ms)')
-ylabel('Value')
-set(gca,'ylim',[0 reserve_size])
-hold on
-plot(ts_20_KO,state_20_KO(:,2),'-b')
-plot(ts_20_KO,state_20_KO(:,3),'-k')
-
-subplot(4,2,8)
-plot(ts_50_KO,state_50_KO(:,1),'color',[255, 165, 0]/255)
-title('KO 50 Hz')
-xlabel('time (ms)')
-ylabel('Value')
-set(gca,'ylim',[0 reserve_size])
-hold on
-plot(ts_50_KO,state_50_KO(:,2),'-b')
-plot(ts_50_KO,state_50_KO(:,3),'-k')
-
 
 %plot simulated data
 rec = [50 100 200 350 500 750 1000 2000 5000 10000];
@@ -352,11 +199,12 @@ function [ts, state, Fused] = stim_sim(stimulus_times, max_time, p_release, k_do
     state = SS;
     
     for i = 1:length(stim_delay)
-
+        
+        p = (2*(1-p_release)/(1+1/Syt3(round(ts(end)/.1)+1))) + p_release;
         pre_stim = state(end,:);
-        post_stim = pre_stim + [pre_stim(2)*p_release, -pre_stim(2)*p_release, 0];
-        Fused(i) = pre_stim(2)*p_release;  
-        [t,out] = ode113(@(t,state) dState(t, state, k_docking, k_undocking, reserve_size, k_refill, Syt3(1,:)), [ts(end) ts(end)+stim_delay(i)], post_stim);
+        post_stim = pre_stim + [pre_stim(2)*p, -pre_stim(2)*p, 0];
+        Fused(i) = pre_stim(2)*p;  
+        [t,out] = ode113(@(t,state) dState(t, state, k_docking, k_undocking, reserve_size, k_refill), [ts(end) ts(end)+stim_delay(i)], post_stim);
 
         state = [state(1:end,:); out];
 
@@ -370,9 +218,10 @@ function [ts, state, Fused] = stim_sim(stimulus_times, max_time, p_release, k_do
         
         for i = 1:length(Recovery)
             
-            [~,out] = ode113(@(t,state) dState(t, state, k_docking, k_undocking, reserve_size, k_refill, Syt3(i,:)), stimulus_times(end)+[0 Recovery(i)], post_stim);
+            [t,out] = ode113(@(t,state) dState(t, state, k_docking, k_undocking, reserve_size, k_refill), stimulus_times(end)+[0 Recovery(i)], post_stim);
+            p = (2*(1-p_release)/(1+1/Syt3(round(t(end)/.1)+1))) + p_release;
             pre_stim = out(end,:);
-            Fused_rec(i) = pre_stim(2)*p_release;
+            Fused_rec(i) = pre_stim(2)*p;
        
         end
         Fused = [Fused; Fused_rec];
@@ -383,17 +232,17 @@ function [ts, state, Fused] = stim_sim(stimulus_times, max_time, p_release, k_do
     ts = [delta_t; ts];
 end
 
-function dydt = dSS(~,state,k_docking,k_undocking,reserve_size,k_refill,Syt3)
+function dydt = dSS(~,state,k_docking,k_undocking,reserve_size,k_refill)
 
-dydt(1,1) = -state(1)*(state(3)/reserve_size)*k_docking*(1+Syt3) + state(2)*k_undocking;
+dydt(1,1) = -state(1)*(state(3)/reserve_size)*k_docking + state(2)*k_undocking;
 dydt(2,1) = -dydt(1,1);
 dydt(3,1) = dydt(1,1) + (reserve_size-state(3))*k_refill;
 
 end
 
-function dydt = dState(t,state,k_docking,k_undocking,reserve_size,k_refill,Syt3)
+function dydt = dState(~,state,k_docking,k_undocking,reserve_size,k_refill)
 
-dydt(1,1) = -state(1)*(state(3)/reserve_size)*k_docking*(1+Syt3(round(t/.1)+1)) + state(2)*k_undocking;
+dydt(1,1) = -state(1)*(state(3)/reserve_size)*k_docking + state(2)*k_undocking;
 dydt(2,1) = -dydt(1,1);
 dydt(3,1) = dydt(1,1) + (reserve_size-state(3))*k_refill;
 end

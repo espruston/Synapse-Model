@@ -9,9 +9,10 @@ CF10HzSyt3 = load('..\CF10HzSyt3.mat').Syt3;
 CF20HzSyt3 = load('..\CF20HzSyt3.mat').Syt3;
 CF50HzSyt3 = load('..\CF50HzSyt3.mat').Syt3;
 
-%x = [0.3,0.0030281,0.001,5,0.003,1];
+plotCaSyts = 0;
+plotStates = 0;
 %x = [0.70303,0.0033015,0.00010035,6.7483,0.0001,0]; %KO best fit 1/13/2021 err = 0.69845
-x = [0.69133,0.0030281,0.00020113,14.1101,1.9541e-05,8.9497]; %best fit 2/11/21 cost = 0.83658
+x = [0.737502,0.002,0.00146176,14.2557,3.5552e-05,6.48438]; %best fit 2/28/21 cost = 0.91255
 
 p_release = x(1); 
 k_docking = x(2); 
@@ -82,164 +83,162 @@ cost = err + abs(err_WT - err_KO)/10;
 
 disp(['Cost = ', num2str(cost), ', average error = ', num2str(err), ', WT error = ', num2str(err_WT), ', KO error = ', num2str(err_KO)])
 
-%plot Ca and Syts
-figure('Name','Ca & Syt3 Simulation (WT)','NumberTitle','off')
-subplot(4,2,1)
-semilogy(ts_1_WT,CF1HzCa(round(ts_1_WT/.1)+1))
-title('1 Hz Ca')
-xlabel('time (ms)')
-ylabel('Ca Conc. (M)')
+if plotCaSyts == 1
+    %plot Ca and Syts
+    figure('Name','Ca & Syt3 Simulation (WT)','NumberTitle','off')
+    subplot(4,2,1)
+    semilogy(ts_1_WT,CF1HzCa(round(ts_1_WT/.1)+1))
+    title('1 Hz Ca')
+    xlabel('time (ms)')
+    ylabel('Ca Conc. (M)')
 
-ax = gca;
-ax.XRuler.Exponent = 0;
+    ax = gca;
+    ax.XRuler.Exponent = 0;
 
-subplot(4,2,2)
-plot(ts_1_WT,CF1HzSyt3(round(ts_1_WT/.1)+1))
-title('1 Hz Syt3')
-xlabel('time (ms)')
-ylabel('Fraction Bound Syt3')
-set(gca,'ylim',[0 1])
+    subplot(4,2,2)
+    plot(ts_1_WT,CF1HzSyt3(round(ts_1_WT/.1)+1))
+    title('1 Hz Syt3')
+    xlabel('time (ms)')
+    ylabel('Bound Syt3')
 
-ax = gca;
-ax.XRuler.Exponent = 0;
+    ax = gca;
+    ax.XRuler.Exponent = 0;
 
-subplot(4,2,3)
-semilogy(ts_10_WT,CF10HzCa(round(ts_10_WT/.1)+1))
-title('10 Hz Ca')
-xlabel('time (ms)')
-ylabel('Ca Conc. (M)')
+    subplot(4,2,3)
+    semilogy(ts_10_WT,CF10HzCa(round(ts_10_WT/.1)+1))
+    title('10 Hz')
+    xlabel('time (ms)')
+    ylabel('Ca Conc. (M)')
 
-subplot(4,2,4)
-plot(ts_10_WT,CF10HzSyt3(round(ts_10_WT/.1)+1))
-title('10 Hz Syt3')
-xlabel('time (ms)')
-ylabel('Fraction Bound Syt3')
-set(gca,'ylim',[0 1])
+    subplot(4,2,4)
+    plot(ts_10_WT,CF10HzSyt3(round(ts_10_WT/.1)+1))
+    title('10 Hz')
+    xlabel('time (ms)')
+    ylabel('Bound Syt3')
 
-subplot(4,2,5)
-semilogy(ts_20_WT,CF20HzCa(round(ts_20_WT/.1)+1))
-title('20 Hz Ca')
-xlabel('time (ms)')
-ylabel('Ca Conc. (M)')
+    subplot(4,2,5)
+    semilogy(ts_20_WT,CF20HzCa(round(ts_20_WT/.1)+1))
+    title('20 Hz')
+    xlabel('time (ms)')
+    ylabel('Ca Conc. (M)')
 
-subplot(4,2,6)
-plot(ts_20_WT,CF20HzSyt3(round(ts_20_WT/.1)+1))
-title('20 Hz Syt3')
-xlabel('time (ms)')
-ylabel('Fraction Bound Syt3')
-set(gca,'ylim',[0 1])
+    subplot(4,2,6)
+    plot(ts_20_WT,CF20HzSyt3(round(ts_20_WT/.1)+1))
+    title('20 Hz')
+    xlabel('time (ms)')
+    ylabel('Bound Syt3')
 
-subplot(4,2,7)
-semilogy(ts_50_WT,CF50HzCa(1,round(ts_50_WT/.1)+1))
-title('50 Hz Ca')
-xlabel('time (ms)')
-ylabel('Ca Conc. (M)')
+    subplot(4,2,7)
+    semilogy(ts_50_WT,CF50HzCa(1,round(ts_50_WT/.1)+1))
+    title('50 Hz')
+    xlabel('time (ms)')
+    ylabel('Ca Conc. (M)')
 
-subplot(4,2,8)
-plot(ts_50_WT,CF50HzSyt3(1,round(ts_50_WT/.1)+1))
-title('50 Hz Syt3')
-xlabel('time (ms)')
-ylabel('Fraction Bound Syt3')
-set(gca,'ylim',[0 1])
+    subplot(4,2,8)
+    plot(ts_50_WT,CF50HzSyt3(1,round(ts_50_WT/.1)+1))
+    title('50 Hz')
+    xlabel('time (ms)')
+    ylabel('Bound Syt3')
+end
 
+if plotStates  == 1
+    %state plots
+    figure('Name','State Simulations','NumberTitle','off')
+    subplot(4,2,1)
+    plot(ts_1_WT,state_1_WT(:,1),'color',[255, 165, 0]/255)
+    title('WT 1 Hz')
+    xlabel('time (ms)')
+    ylabel('Value')
+    set(gca,'ylim',[0 reserve_size])
+    hold on
+    plot(ts_1_WT,state_1_WT(:,2),'-b')
+    plot(ts_1_WT,state_1_WT(:,3),'-k')
 
-%state plots
-figure('Name','State Simulations','NumberTitle','off')
-subplot(4,2,1)
-plot(ts_1_WT,state_1_WT(:,1),'color',[255, 165, 0]/255)
-title('WT 1 Hz')
-xlabel('time (ms)')
-ylabel('Value')
-set(gca,'ylim',[0 reserve_size])
-hold on
-plot(ts_1_WT,state_1_WT(:,2),'-b')
-plot(ts_1_WT,state_1_WT(:,3),'-k')
+    ax = gca;
+    ax.XRuler.Exponent = 0;
 
-ax = gca;
-ax.XRuler.Exponent = 0;
+    subplot(4,2,3)
+    plot(ts_10_WT,state_10_WT(:,1),'color',[255, 165, 0]/255)
+    title('WT 10 Hz')
+    xlabel('time (ms)')
+    ylabel('Value')
+    set(gca,'ylim',[0 reserve_size])
+    hold on
+    plot(ts_10_WT,state_10_WT(:,2),'-b')
+    plot(ts_10_WT,state_10_WT(:,3),'-k')
 
-subplot(4,2,3)
-plot(ts_10_WT,state_10_WT(:,1),'color',[255, 165, 0]/255)
-title('WT 10 Hz')
-xlabel('time (ms)')
-ylabel('Value')
-set(gca,'ylim',[0 reserve_size])
-hold on
-plot(ts_10_WT,state_10_WT(:,2),'-b')
-plot(ts_10_WT,state_10_WT(:,3),'-k')
+    subplot(4,2,5)
+    plot(ts_20_WT,state_20_WT(:,1),'color',[255, 165, 0]/255)
+    title('WT 20 Hz')
+    xlabel('time (ms)')
+    ylabel('Value')
+    set(gca,'ylim',[0 reserve_size])
+    hold on
+    plot(ts_20_WT,state_20_WT(:,2),'-b')
+    plot(ts_20_WT,state_20_WT(:,3),'-k')
 
-subplot(4,2,5)
-plot(ts_20_WT,state_20_WT(:,1),'color',[255, 165, 0]/255)
-title('WT 20 Hz')
-xlabel('time (ms)')
-ylabel('Value')
-set(gca,'ylim',[0 reserve_size])
-hold on
-plot(ts_20_WT,state_20_WT(:,2),'-b')
-plot(ts_20_WT,state_20_WT(:,3),'-k')
+    subplot(4,2,7)
+    plot(ts_50_WT,state_50_WT(:,1),'color',[255, 165, 0]/255)
+    title('WT 50 Hz')
+    xlabel('time (ms)')
+    ylabel('Value')
+    set(gca,'ylim',[0 reserve_size])
+    hold on
+    plot(ts_50_WT,state_50_WT(:,2),'-b')
+    plot(ts_50_WT,state_50_WT(:,3),'-k')
 
-subplot(4,2,7)
-plot(ts_50_WT,state_50_WT(:,1),'color',[255, 165, 0]/255)
-title('WT 50 Hz')
-xlabel('time (ms)')
-ylabel('Value')
-set(gca,'ylim',[0 reserve_size])
-hold on
-plot(ts_50_WT,state_50_WT(:,2),'-b')
-plot(ts_50_WT,state_50_WT(:,3),'-k')
+    subplot(4,2,2)
+    plot(ts_1_KO,state_1_KO(:,1),'color',[255, 165, 0]/255)
+    title('KO 1 Hz')
+    xlabel('time (ms)')
+    ylabel('Value')
+    set(gca,'ylim',[0 reserve_size])
+    hold on
+    plot(ts_1_KO,state_1_KO(:,2),'-b')
+    plot(ts_1_KO,state_1_KO(:,3),'-k')
 
-subplot(4,2,2)
-plot(ts_1_KO,state_1_KO(:,1),'color',[255, 165, 0]/255)
-title('KO 1 Hz')
-xlabel('time (ms)')
-ylabel('Value')
-set(gca,'ylim',[0 reserve_size])
-hold on
-plot(ts_1_KO,state_1_KO(:,2),'-b')
-plot(ts_1_KO,state_1_KO(:,3),'-k')
+    ax = gca;
+    ax.XRuler.Exponent = 0;
 
-ax = gca;
-ax.XRuler.Exponent = 0;
+    legend({'Empty Sites','Filled Sites','Reserve Vesicles'},'Location','Best')
 
-legend({'Empty Sites','Filled Sites','Reserve Vesicles'},'Location','Best')
+    subplot(4,2,4)
+    plot(ts_10_KO,state_10_KO(:,1),'color',[255, 165, 0]/255)
+    title('KO 10 Hz')
+    xlabel('time (ms)')
+    ylabel('Value')
+    set(gca,'ylim',[0 reserve_size])
+    hold on
+    plot(ts_10_KO,state_10_KO(:,2),'-b')
+    plot(ts_10_KO,state_10_KO(:,3),'-k')
 
-subplot(4,2,4)
-plot(ts_10_KO,state_10_KO(:,1),'color',[255, 165, 0]/255)
-title('KO 10 Hz')
-xlabel('time (ms)')
-ylabel('Value')
-set(gca,'ylim',[0 reserve_size])
-hold on
-plot(ts_10_KO,state_10_KO(:,2),'-b')
-plot(ts_10_KO,state_10_KO(:,3),'-k')
+    subplot(4,2,6)
+    plot(ts_20_KO,state_20_KO(:,1),'color',[255, 165, 0]/255)
+    title('KO 20 Hz')
+    xlabel('time (ms)')
+    ylabel('Value')
+    set(gca,'ylim',[0 reserve_size])
+    hold on
+    plot(ts_20_KO,state_20_KO(:,2),'-b')
+    plot(ts_20_KO,state_20_KO(:,3),'-k')
 
-subplot(4,2,6)
-plot(ts_20_KO,state_20_KO(:,1),'color',[255, 165, 0]/255)
-title('KO 20 Hz')
-xlabel('time (ms)')
-ylabel('Value')
-set(gca,'ylim',[0 reserve_size])
-hold on
-plot(ts_20_KO,state_20_KO(:,2),'-b')
-plot(ts_20_KO,state_20_KO(:,3),'-k')
-
-subplot(4,2,8)
-plot(ts_50_KO,state_50_KO(:,1),'color',[255, 165, 0]/255)
-title('KO 50 Hz')
-xlabel('time (ms)')
-ylabel('Value')
-set(gca,'ylim',[0 reserve_size])
-hold on
-plot(ts_50_KO,state_50_KO(:,2),'-b')
-plot(ts_50_KO,state_50_KO(:,3),'-k')
-
+    subplot(4,2,8)
+    plot(ts_50_KO,state_50_KO(:,1),'color',[255, 165, 0]/255)
+    title('KO 50 Hz')
+    xlabel('time (ms)')
+    ylabel('Value')
+    set(gca,'ylim',[0 reserve_size])
+    hold on
+    plot(ts_50_KO,state_50_KO(:,2),'-b')
+    plot(ts_50_KO,state_50_KO(:,3),'-k')
+end
 
 %plot simulated data
 rec = [50 100 200 350 500 750 1000 2000 5000 10000];
 
 figure('Name','Simulated vs Collected Data','NumberTitle','off')
 subplot(5,2,1)
-plot(CFDataWT(1:20,1),'kx')
+plot(CFDataWT(1:20,1),'-k')
 title('WT 1 Hz')
 xlabel('Pulse #')
 ylabel('Peak EPSC')
@@ -250,7 +249,7 @@ plot(hz_1_WT,'ko','Markersize',5)
 legend({'Data','Simulation'},'Location','Best')
 
 subplot(5,2,3)
-plot(CFDataWT(1:20,2),'kx')
+plot(CFDataWT(1:20,2),'-k')
 title('WT 10 Hz')
 xlabel('Pulse #')
 ylabel('Peak EPSC')
@@ -260,7 +259,7 @@ hold on
 plot(hz_10_WT,'ko','Markersize',5)
 
 subplot(5,2,5)
-plot(CFDataWT(1:20,3),'kx')
+plot(CFDataWT(1:20,3),'-k')
 title('WT 20 Hz')
 xlabel('Pulse #')
 ylabel('Peak EPSC')
@@ -270,7 +269,7 @@ hold on
 plot(hz_20_WT,'ko','Markersize',5)
 
 subplot(5,2,7)
-plot(CFDataWT(1:20,4),'kx')
+plot(CFDataWT(1:20,4),'-k')
 title('WT 50 Hz')
 xlabel('Pulse #')
 ylabel('Peak EPSC')
@@ -280,7 +279,7 @@ hold on
 plot(hz_50_WT(1:20),'ko','Markersize',5)
 
 subplot(5,2,9)
-semilogx(rec,CFDataWT(21:30,4),'kx')
+semilogx(rec,CFDataWT(21:30,4),'-k')
 title('WT 50 Hz Recovery')
 xlabel('t (ms)')
 ylabel('Peak EPSC')
@@ -290,7 +289,7 @@ hold on
 semilogx(rec,hz_50_WT(21:30),'ko','Markersize',5)
 
 subplot(5,2,2)
-plot(CFDataKO(1:20,1),'kx')
+plot(CFDataKO(1:20,1),'-k')
 title('KO 1 Hz')
 xlabel('Pulse #')
 ylabel('Peak EPSC')
@@ -300,7 +299,7 @@ hold on
 plot(hz_1_KO,'ko','Markersize',5)
 
 subplot(5,2,4)
-plot(CFDataKO(1:20,2),'kx')
+plot(CFDataKO(1:20,2),'-k')
 title('KO 10 Hz')
 xlabel('Pulse #')
 ylabel('Peak EPSC')
@@ -310,7 +309,7 @@ hold on
 plot(hz_10_KO,'ko','Markersize',5)
 
 subplot(5,2,6)
-plot(CFDataKO(1:20,3),'kx')
+plot(CFDataKO(1:20,3),'-k')
 title('KO 20 Hz')
 xlabel('Pulse #')
 ylabel('Peak EPSC')
@@ -320,7 +319,7 @@ hold on
 plot(hz_20_KO,'ko','Markersize',5)
 
 subplot(5,2,8)
-plot(CFDataKO(1:20,4),'kx')
+plot(CFDataKO(1:20,4),'-k')
 title('KO 50 Hz')
 xlabel('Pulse #')
 ylabel('Peak EPSC')
@@ -330,7 +329,7 @@ hold on
 plot(hz_50_KO(1:20),'ko','Markersize',5)
 
 subplot(5,2,10)
-semilogx(rec,CFDataKO(21:30,4),'kx')
+semilogx(rec,CFDataKO(21:30,4),'-k')
 title('KO 50 Hz Recovery')
 xlabel('t (ms)')
 ylabel('Peak EPSC')
@@ -385,7 +384,8 @@ end
 
 function dydt = dSS(~,state,k_docking,k_undocking,reserve_size,k_refill,Syt3)
 
-dydt(1,1) = -state(1)*(state(3)/reserve_size)*k_docking*(1+Syt3) + state(2)*k_undocking;
+multFactor = 1+Syt3;
+dydt(1,1) = -state(1)*(state(3)/reserve_size)*k_docking*multFactor + state(2)*k_undocking*multFactor;
 dydt(2,1) = -dydt(1,1);
 dydt(3,1) = dydt(1,1) + (reserve_size-state(3))*k_refill;
 
@@ -393,7 +393,8 @@ end
 
 function dydt = dState(t,state,k_docking,k_undocking,reserve_size,k_refill,Syt3)
 
-dydt(1,1) = -state(1)*(state(3)/reserve_size)*k_docking*(1+Syt3(round(t/.1)+1)) + state(2)*k_undocking;
+multFactor = 1+Syt3(round(t/.1)+1);
+dydt(1,1) = -state(1)*(state(3)/reserve_size)*k_docking*multFactor + state(2)*k_undocking*multFactor;
 dydt(2,1) = -dydt(1,1);
 dydt(3,1) = dydt(1,1) + (reserve_size-state(3))*k_refill;
 end

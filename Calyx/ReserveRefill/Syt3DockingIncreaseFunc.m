@@ -1,9 +1,9 @@
 function cost = Syt3DockingIncreaseFunc(x)
 disp(['Testing x = [', num2str(x(1)), ',', num2str(x(2)), ',', num2str(x(3)), ',', num2str(x(4)), ',', num2str(x(5)), ',', num2str(x(6)), ',', num2str(x(7)), ']'])
 
-CalyxDataWT = load('..\CalyxDataWT.mat').CalyxDataWT;
-CalyxData3KO = load('..\CalyxData3KO.mat').CalyxData3KO;
-CalyxData7KO = load('..\CalyxData7KO.mat').CalyxData7KO;
+% CalyxDataWT = load('..\CalyxDataWT.mat').CalyxDataWT;
+% CalyxData3KO = load('..\CalyxData3KO.mat').CalyxData3KO;
+% CalyxData7KO = load('..\CalyxData7KO.mat').CalyxData7KO;
 CalyxDataDKO = load('..\CalyxDataDKO.mat').CalyxDataDKO;
 % Calyx1HzCa = load('..\Calyx1HzCa.mat').Ca_sim;
 % Calyx10HzCa = load('..\Calyx10HzCa.mat').Ca_sim;
@@ -55,56 +55,56 @@ max_time_200 = stimulus_times_200(end) + stimulus_times_200(2)*3;
 t_SS = 10000; %ms
 state_0 = [1; 0; reserve_size]; %[empty pool; bound pool; reserve pool]
 
-%WT
-[~,state] = ode113(@(t,state) dSS(t, state, k_docking, k_undocking, reserve_size, k_refill, C_3*Calyx1HzSyt3(1), C_7*Calyx1HzSyt7(1)), [0 t_SS], state_0);
-
-SS_WT = state(end,:);
-
-[~, ~, Fused_1_WT] = stim_sim(stimulus_times_1, max_time_1, p_release, k_docking, k_undocking, SS_WT, reserve_size, k_refill, C_3*Calyx1HzSyt3, C_7*Calyx1HzSyt7);
-hz_1_WT = Fused_1_WT/Fused_1_WT(1);
-
-[~, ~, Fused_10_WT] = stim_sim(stimulus_times_10, max_time_10, p_release, k_docking, k_undocking, SS_WT, reserve_size, k_refill, C_3*Calyx10HzSyt3, C_7*Calyx10HzSyt7);
-hz_10_WT = Fused_10_WT/Fused_10_WT(1);
-
-[~, ~, Fused_20_WT] = stim_sim(stimulus_times_20, max_time_20, p_release, k_docking, k_undocking, SS_WT, reserve_size, k_refill, C_3*Calyx20HzSyt3, C_7*Calyx20HzSyt7);
-hz_20_WT = Fused_20_WT/Fused_20_WT(1);
-
-[~, ~, Fused_50_WT] = stim_sim(stimulus_times_50, max_time_50, p_release, k_docking, k_undocking, SS_WT, reserve_size, k_refill, C_3*Calyx50HzSyt3, C_7*Calyx50HzSyt7);
-hz_50_WT = Fused_50_WT/Fused_50_WT(1);
-
-[~, ~, Fused_100_WT] = stim_sim(stimulus_times_100, max_time_100, p_release, k_docking, k_undocking, SS_WT, reserve_size, k_refill, C_3*Calyx100HzSyt3, C_7*Calyx100HzSyt7);
-hz_100_WT = Fused_100_WT/Fused_100_WT(1);
-
-[~, ~, Fused_200_WT] = stim_sim(stimulus_times_200, max_time_200, p_release, k_docking, k_undocking, SS_WT, reserve_size, k_refill, C_3*Calyx200HzSyt3, C_7*Calyx200HzSyt7);
-hz_200_WT = Fused_200_WT/Fused_200_WT(1);
-
-err_WT = sqrt(2*sum((hz_1_WT(1:10) - CalyxDataWT(1:10,1)).^2 + (hz_10_WT(1:10) - CalyxDataWT(1:10,2)).^2 + (hz_20_WT(1:10) - CalyxDataWT(1:10,3)).^2 + (hz_50_WT(1:10) - CalyxDataWT(1:10,4)).^2 + (hz_100_WT(1:10) - CalyxDataWT(1:10,5)).^2 + (hz_200_WT(1:10) - CalyxDataWT(1:10,6)).^2) + sum((hz_1_WT(11:100) - CalyxDataWT(11:100,1)).^2 + (hz_10_WT(11:100) - CalyxDataWT(11:100,2)).^2 + (hz_20_WT(11:100) - CalyxDataWT(11:100,3)).^2 + (hz_50_WT(11:100) - CalyxDataWT(11:100,4)).^2 + (hz_100_WT(11:100) - CalyxDataWT(11:100,5)).^2 + (hz_200_WT(11:100) - CalyxDataWT(11:100,6)).^2) + 10*sum((hz_10_WT(101:111) - CalyxDataWT(101:111,2)).^2 + (hz_20_WT(101:111) - CalyxDataWT(101:111,3)).^2 + (hz_50_WT(101:111) - CalyxDataWT(101:111,4)).^2 + (hz_100_WT(101:111) - CalyxDataWT(101:111,5)).^2 + (hz_200_WT(101:111) - CalyxDataWT(101:111,6)).^2));
-
-%3KO
+% %WT
+% [~,state] = ode113(@(t,state) dSS(t, state, k_docking, k_undocking, reserve_size, k_refill, C_3*Calyx1HzSyt3(1), C_7*Calyx1HzSyt7(1)), [0 t_SS], state_0);
+% 
+% SS_WT = state(end,:);
+% 
+% [~, ~, Fused_1_WT] = stim_sim(stimulus_times_1, max_time_1, p_release, k_docking, k_undocking, SS_WT, reserve_size, k_refill, C_3*Calyx1HzSyt3, C_7*Calyx1HzSyt7);
+% hz_1_WT = Fused_1_WT/Fused_1_WT(1);
+% 
+% [~, ~, Fused_10_WT] = stim_sim(stimulus_times_10, max_time_10, p_release, k_docking, k_undocking, SS_WT, reserve_size, k_refill, C_3*Calyx10HzSyt3, C_7*Calyx10HzSyt7);
+% hz_10_WT = Fused_10_WT/Fused_10_WT(1);
+% 
+% [~, ~, Fused_20_WT] = stim_sim(stimulus_times_20, max_time_20, p_release, k_docking, k_undocking, SS_WT, reserve_size, k_refill, C_3*Calyx20HzSyt3, C_7*Calyx20HzSyt7);
+% hz_20_WT = Fused_20_WT/Fused_20_WT(1);
+% 
+% [~, ~, Fused_50_WT] = stim_sim(stimulus_times_50, max_time_50, p_release, k_docking, k_undocking, SS_WT, reserve_size, k_refill, C_3*Calyx50HzSyt3, C_7*Calyx50HzSyt7);
+% hz_50_WT = Fused_50_WT/Fused_50_WT(1);
+% 
+% [~, ~, Fused_100_WT] = stim_sim(stimulus_times_100, max_time_100, p_release, k_docking, k_undocking, SS_WT, reserve_size, k_refill, C_3*Calyx100HzSyt3, C_7*Calyx100HzSyt7);
+% hz_100_WT = Fused_100_WT/Fused_100_WT(1);
+% 
+% [~, ~, Fused_200_WT] = stim_sim(stimulus_times_200, max_time_200, p_release, k_docking, k_undocking, SS_WT, reserve_size, k_refill, C_3*Calyx200HzSyt3, C_7*Calyx200HzSyt7);
+% hz_200_WT = Fused_200_WT/Fused_200_WT(1);
+% 
+% err_WT = sqrt(2*sum((hz_1_WT(1:10) - CalyxDataWT(1:10,1)).^2 + (hz_10_WT(1:10) - CalyxDataWT(1:10,2)).^2 + (hz_20_WT(1:10) - CalyxDataWT(1:10,3)).^2 + (hz_50_WT(1:10) - CalyxDataWT(1:10,4)).^2 + (hz_100_WT(1:10) - CalyxDataWT(1:10,5)).^2 + (hz_200_WT(1:10) - CalyxDataWT(1:10,6)).^2) + sum((hz_1_WT(11:100) - CalyxDataWT(11:100,1)).^2 + (hz_10_WT(11:100) - CalyxDataWT(11:100,2)).^2 + (hz_20_WT(11:100) - CalyxDataWT(11:100,3)).^2 + (hz_50_WT(11:100) - CalyxDataWT(11:100,4)).^2 + (hz_100_WT(11:100) - CalyxDataWT(11:100,5)).^2 + (hz_200_WT(11:100) - CalyxDataWT(11:100,6)).^2) + 10*sum((hz_10_WT(101:111) - CalyxDataWT(101:111,2)).^2 + (hz_20_WT(101:111) - CalyxDataWT(101:111,3)).^2 + (hz_50_WT(101:111) - CalyxDataWT(101:111,4)).^2 + (hz_100_WT(101:111) - CalyxDataWT(101:111,5)).^2 + (hz_200_WT(101:111) - CalyxDataWT(101:111,6)).^2));
+% 
+% %3KO
 C_3 = 0;
-[~,state] = ode113(@(t,state) dSS(t, state, k_docking, k_undocking, reserve_size, k_refill, C_3*Calyx1HzSyt3(1), C_7*Calyx1HzSyt7(1)), [0 t_SS], state_0);
-
-SS_3KO = state(end,:);
-
-[~, ~, Fused_1_3KO] = stim_sim(stimulus_times_1, max_time_1, p_release, k_docking, k_undocking, SS_3KO, reserve_size, k_refill, C_3*Calyx1HzSyt3, C_7*Calyx1HzSyt7);
-hz_1_3KO = Fused_1_3KO/Fused_1_3KO(1);
-
-[~, ~, Fused_10_3KO] = stim_sim(stimulus_times_10, max_time_10, p_release, k_docking, k_undocking, SS_3KO, reserve_size, k_refill, C_3*Calyx10HzSyt3, C_7*Calyx10HzSyt7);
-hz_10_3KO = Fused_10_3KO/Fused_10_3KO(1);
-
-[~, ~, Fused_20_3KO] = stim_sim(stimulus_times_20, max_time_20, p_release, k_docking, k_undocking, SS_3KO, reserve_size, k_refill, C_3*Calyx20HzSyt3, C_7*Calyx20HzSyt7);
-hz_20_3KO = Fused_20_3KO/Fused_20_3KO(1);
-
-[~, ~, Fused_50_3KO] = stim_sim(stimulus_times_50, max_time_50, p_release, k_docking, k_undocking, SS_3KO, reserve_size, k_refill, C_3*Calyx50HzSyt3, C_7*Calyx50HzSyt7);
-hz_50_3KO = Fused_50_3KO/Fused_50_3KO(1);
-
-[~, ~, Fused_100_3KO] = stim_sim(stimulus_times_100, max_time_100, p_release, k_docking, k_undocking, SS_3KO, reserve_size, k_refill, C_3*Calyx100HzSyt3, C_7*Calyx100HzSyt7);
-hz_100_3KO = Fused_100_3KO/Fused_100_3KO(1);
-
-[~, ~, Fused_200_3KO] = stim_sim(stimulus_times_200, max_time_200, p_release, k_docking, k_undocking, SS_3KO, reserve_size, k_refill, C_3*Calyx200HzSyt3, C_7*Calyx200HzSyt7);
-hz_200_3KO = Fused_200_3KO/Fused_200_3KO(1);
-
-err_3KO = sqrt(2*sum((hz_1_3KO(1:10) - CalyxData3KO(1:10,1)).^2 + (hz_10_3KO(1:10) - CalyxData3KO(1:10,2)).^2 + (hz_20_3KO(1:10) - CalyxData3KO(1:10,3)).^2 + (hz_50_3KO(1:10) - CalyxData3KO(1:10,4)).^2 + (hz_100_3KO(1:10) - CalyxData3KO(1:10,5)).^2 + (hz_200_3KO(1:10) - CalyxData3KO(1:10,6)).^2) + sum((hz_1_3KO(11:100) - CalyxData3KO(11:100,1)).^2 + (hz_10_3KO(11:100) - CalyxData3KO(11:100,2)).^2 + (hz_20_3KO(11:100) - CalyxData3KO(11:100,3)).^2 + (hz_50_3KO(11:100) - CalyxData3KO(11:100,4)).^2 + (hz_100_3KO(11:100) - CalyxData3KO(11:100,5)).^2 + (hz_200_3KO(11:100) - CalyxData3KO(11:100,6)).^2) + 10*sum((hz_10_3KO(101:111) - CalyxData3KO(101:111,2)).^2 + (hz_20_3KO(101:111) - CalyxData3KO(101:111,3)).^2 + (hz_50_3KO(101:111) - CalyxData3KO(101:111,4)).^2 + (hz_100_3KO(101:111) - CalyxData3KO(101:111,5)).^2 + (hz_200_3KO(101:111) - CalyxData3KO(101:111,6)).^2));
+% [~,state] = ode113(@(t,state) dSS(t, state, k_docking, k_undocking, reserve_size, k_refill, C_3*Calyx1HzSyt3(1), C_7*Calyx1HzSyt7(1)), [0 t_SS], state_0);
+% 
+% SS_3KO = state(end,:);
+% 
+% [~, ~, Fused_1_3KO] = stim_sim(stimulus_times_1, max_time_1, p_release, k_docking, k_undocking, SS_3KO, reserve_size, k_refill, C_3*Calyx1HzSyt3, C_7*Calyx1HzSyt7);
+% hz_1_3KO = Fused_1_3KO/Fused_1_3KO(1);
+% 
+% [~, ~, Fused_10_3KO] = stim_sim(stimulus_times_10, max_time_10, p_release, k_docking, k_undocking, SS_3KO, reserve_size, k_refill, C_3*Calyx10HzSyt3, C_7*Calyx10HzSyt7);
+% hz_10_3KO = Fused_10_3KO/Fused_10_3KO(1);
+% 
+% [~, ~, Fused_20_3KO] = stim_sim(stimulus_times_20, max_time_20, p_release, k_docking, k_undocking, SS_3KO, reserve_size, k_refill, C_3*Calyx20HzSyt3, C_7*Calyx20HzSyt7);
+% hz_20_3KO = Fused_20_3KO/Fused_20_3KO(1);
+% 
+% [~, ~, Fused_50_3KO] = stim_sim(stimulus_times_50, max_time_50, p_release, k_docking, k_undocking, SS_3KO, reserve_size, k_refill, C_3*Calyx50HzSyt3, C_7*Calyx50HzSyt7);
+% hz_50_3KO = Fused_50_3KO/Fused_50_3KO(1);
+% 
+% [~, ~, Fused_100_3KO] = stim_sim(stimulus_times_100, max_time_100, p_release, k_docking, k_undocking, SS_3KO, reserve_size, k_refill, C_3*Calyx100HzSyt3, C_7*Calyx100HzSyt7);
+% hz_100_3KO = Fused_100_3KO/Fused_100_3KO(1);
+% 
+% [~, ~, Fused_200_3KO] = stim_sim(stimulus_times_200, max_time_200, p_release, k_docking, k_undocking, SS_3KO, reserve_size, k_refill, C_3*Calyx200HzSyt3, C_7*Calyx200HzSyt7);
+% hz_200_3KO = Fused_200_3KO/Fused_200_3KO(1);
+% 
+% err_3KO = sqrt(2*sum((hz_1_3KO(1:10) - CalyxData3KO(1:10,1)).^2 + (hz_10_3KO(1:10) - CalyxData3KO(1:10,2)).^2 + (hz_20_3KO(1:10) - CalyxData3KO(1:10,3)).^2 + (hz_50_3KO(1:10) - CalyxData3KO(1:10,4)).^2 + (hz_100_3KO(1:10) - CalyxData3KO(1:10,5)).^2 + (hz_200_3KO(1:10) - CalyxData3KO(1:10,6)).^2) + sum((hz_1_3KO(11:100) - CalyxData3KO(11:100,1)).^2 + (hz_10_3KO(11:100) - CalyxData3KO(11:100,2)).^2 + (hz_20_3KO(11:100) - CalyxData3KO(11:100,3)).^2 + (hz_50_3KO(11:100) - CalyxData3KO(11:100,4)).^2 + (hz_100_3KO(11:100) - CalyxData3KO(11:100,5)).^2 + (hz_200_3KO(11:100) - CalyxData3KO(11:100,6)).^2) + 10*sum((hz_10_3KO(101:111) - CalyxData3KO(101:111,2)).^2 + (hz_20_3KO(101:111) - CalyxData3KO(101:111,3)).^2 + (hz_50_3KO(101:111) - CalyxData3KO(101:111,4)).^2 + (hz_100_3KO(101:111) - CalyxData3KO(101:111,5)).^2 + (hz_200_3KO(101:111) - CalyxData3KO(101:111,6)).^2));
 
 
 %DKO
@@ -133,38 +133,40 @@ hz_200_DKO = Fused_200_DKO/Fused_200_DKO(1);
 
 err_DKO = sqrt(2*sum((hz_1_DKO(1:10) - CalyxDataDKO(1:10,1)).^2 + (hz_10_DKO(1:10) - CalyxDataDKO(1:10,2)).^2 + (hz_20_DKO(1:10) - CalyxDataDKO(1:10,3)).^2 + (hz_50_DKO(1:10) - CalyxDataDKO(1:10,4)).^2 + (hz_100_DKO(1:10) - CalyxDataDKO(1:10,5)).^2 + (hz_200_DKO(1:10) - CalyxDataDKO(1:10,6)).^2) + sum((hz_1_DKO(11:100) - CalyxDataDKO(11:100,1)).^2 + (hz_10_DKO(11:100) - CalyxDataDKO(11:100,2)).^2 + (hz_20_DKO(11:100) - CalyxDataDKO(11:100,3)).^2 + (hz_50_DKO(11:100) - CalyxDataDKO(11:100,4)).^2 + (hz_100_DKO(11:100) - CalyxDataDKO(11:100,5)).^2 + (hz_200_DKO(11:100) - CalyxDataDKO(11:100,6)).^2) + 10*sum((hz_10_DKO(101:111) - CalyxDataDKO(101:111,2)).^2 + (hz_20_DKO(101:111) - CalyxDataDKO(101:111,3)).^2 + (hz_50_DKO(101:111) - CalyxDataDKO(101:111,4)).^2 + (hz_100_DKO(101:111) - CalyxDataDKO(101:111,5)).^2 + (hz_200_DKO(101:111) - CalyxDataDKO(101:111,6)).^2));
 
-%7KO
-C_3 = x(6);
-[~,state] = ode113(@(t,state) dSS(t, state, k_docking, k_undocking, reserve_size, k_refill, C_3*Calyx1HzSyt3(1), C_7*Calyx1HzSyt7(1)), [0 t_SS], state_0);
-
-SS_7KO = state(end,:);
-
-[~, ~, Fused_1_7KO] = stim_sim(stimulus_times_1, max_time_1, p_release, k_docking, k_undocking, SS_7KO, reserve_size, k_refill, C_3*Calyx1HzSyt3, C_7*Calyx1HzSyt7);
-hz_1_7KO = Fused_1_7KO/Fused_1_7KO(1);
-
-[~, ~, Fused_10_7KO] = stim_sim(stimulus_times_10, max_time_10, p_release, k_docking, k_undocking, SS_7KO, reserve_size, k_refill, C_3*Calyx10HzSyt3, C_7*Calyx10HzSyt7);
-hz_10_7KO = Fused_10_7KO/Fused_10_7KO(1);
-
-[~, ~, Fused_20_7KO] = stim_sim(stimulus_times_20, max_time_20, p_release, k_docking, k_undocking, SS_7KO, reserve_size, k_refill, C_3*Calyx20HzSyt3, C_7*Calyx20HzSyt7);
-hz_20_7KO = Fused_20_7KO/Fused_20_7KO(1);
-
-[~, ~, Fused_50_7KO] = stim_sim(stimulus_times_50, max_time_50, p_release, k_docking, k_undocking, SS_7KO, reserve_size, k_refill, C_3*Calyx50HzSyt3, C_7*Calyx50HzSyt7);
-hz_50_7KO = Fused_50_7KO/Fused_50_7KO(1);
-
-[~, ~, Fused_100_7KO] = stim_sim(stimulus_times_100, max_time_100, p_release, k_docking, k_undocking, SS_7KO, reserve_size, k_refill, C_3*Calyx100HzSyt3, C_7*Calyx100HzSyt7);
-hz_100_7KO = Fused_100_7KO/Fused_100_7KO(1);
-
-[~, ~, Fused_200_7KO] = stim_sim(stimulus_times_200, max_time_200, p_release, k_docking, k_undocking, SS_7KO, reserve_size, k_refill, C_3*Calyx200HzSyt3, C_7*Calyx200HzSyt7);
-hz_200_7KO = Fused_200_7KO/Fused_200_7KO(1);
-
-err_7KO = sqrt(2*sum((hz_1_7KO(1:10) - CalyxData7KO(1:10,1)).^2 + (hz_10_7KO(1:10) - CalyxData7KO(1:10,2)).^2 + (hz_20_7KO(1:10) - CalyxData7KO(1:10,3)).^2 + (hz_50_7KO(1:10) - CalyxData7KO(1:10,4)).^2 + (hz_100_7KO(1:10) - CalyxData7KO(1:10,5)).^2 + (hz_200_7KO(1:10) - CalyxData7KO(1:10,6)).^2) + sum((hz_1_7KO(11:100) - CalyxData7KO(11:100,1)).^2 + (hz_10_7KO(11:100) - CalyxData7KO(11:100,2)).^2 + (hz_20_7KO(11:100) - CalyxData7KO(11:100,3)).^2 + (hz_50_7KO(11:100) - CalyxData7KO(11:100,4)).^2 + (hz_100_7KO(11:100) - CalyxData7KO(11:100,5)).^2 + (hz_200_7KO(11:100) - CalyxData7KO(11:100,6)).^2) + 10*sum((hz_10_7KO(101:111) - CalyxData7KO(101:111,2)).^2 + (hz_20_7KO(101:111) - CalyxData7KO(101:111,3)).^2 + (hz_50_7KO(101:111) - CalyxData7KO(101:111,4)).^2 + (hz_100_7KO(101:111) - CalyxData7KO(101:111,5)).^2 + (hz_200_7KO(101:111) - CalyxData7KO(101:111,6)).^2));
-
-err = (err_WT + err_3KO + err_7KO + err_DKO)/4;
-
-cost = err + abs(err - err_WT)/25+ abs(err - err_3KO)/25+ abs(err - err_7KO)/25+ abs(err - err_DKO)/25;
-
-disp(['Cost = ', num2str(cost), ', average error = ', num2str(err), ', WT error = ', num2str(err_WT), ', 3KO error = ', num2str(err_3KO), ', 7KO error = ', num2str(err_7KO), ', DKO error = ', num2str(err_DKO)])
-
+% %7KO
+% C_3 = x(6);
+% [~,state] = ode113(@(t,state) dSS(t, state, k_docking, k_undocking, reserve_size, k_refill, C_3*Calyx1HzSyt3(1), C_7*Calyx1HzSyt7(1)), [0 t_SS], state_0);
+% 
+% SS_7KO = state(end,:);
+% 
+% [~, ~, Fused_1_7KO] = stim_sim(stimulus_times_1, max_time_1, p_release, k_docking, k_undocking, SS_7KO, reserve_size, k_refill, C_3*Calyx1HzSyt3, C_7*Calyx1HzSyt7);
+% hz_1_7KO = Fused_1_7KO/Fused_1_7KO(1);
+% 
+% [~, ~, Fused_10_7KO] = stim_sim(stimulus_times_10, max_time_10, p_release, k_docking, k_undocking, SS_7KO, reserve_size, k_refill, C_3*Calyx10HzSyt3, C_7*Calyx10HzSyt7);
+% hz_10_7KO = Fused_10_7KO/Fused_10_7KO(1);
+% 
+% [~, ~, Fused_20_7KO] = stim_sim(stimulus_times_20, max_time_20, p_release, k_docking, k_undocking, SS_7KO, reserve_size, k_refill, C_3*Calyx20HzSyt3, C_7*Calyx20HzSyt7);
+% hz_20_7KO = Fused_20_7KO/Fused_20_7KO(1);
+% 
+% [~, ~, Fused_50_7KO] = stim_sim(stimulus_times_50, max_time_50, p_release, k_docking, k_undocking, SS_7KO, reserve_size, k_refill, C_3*Calyx50HzSyt3, C_7*Calyx50HzSyt7);
+% hz_50_7KO = Fused_50_7KO/Fused_50_7KO(1);
+% 
+% [~, ~, Fused_100_7KO] = stim_sim(stimulus_times_100, max_time_100, p_release, k_docking, k_undocking, SS_7KO, reserve_size, k_refill, C_3*Calyx100HzSyt3, C_7*Calyx100HzSyt7);
+% hz_100_7KO = Fused_100_7KO/Fused_100_7KO(1);
+% 
+% [~, ~, Fused_200_7KO] = stim_sim(stimulus_times_200, max_time_200, p_release, k_docking, k_undocking, SS_7KO, reserve_size, k_refill, C_3*Calyx200HzSyt3, C_7*Calyx200HzSyt7);
+% hz_200_7KO = Fused_200_7KO/Fused_200_7KO(1);
+% 
+% err_7KO = sqrt(2*sum((hz_1_7KO(1:10) - CalyxData7KO(1:10,1)).^2 + (hz_10_7KO(1:10) - CalyxData7KO(1:10,2)).^2 + (hz_20_7KO(1:10) - CalyxData7KO(1:10,3)).^2 + (hz_50_7KO(1:10) - CalyxData7KO(1:10,4)).^2 + (hz_100_7KO(1:10) - CalyxData7KO(1:10,5)).^2 + (hz_200_7KO(1:10) - CalyxData7KO(1:10,6)).^2) + sum((hz_1_7KO(11:100) - CalyxData7KO(11:100,1)).^2 + (hz_10_7KO(11:100) - CalyxData7KO(11:100,2)).^2 + (hz_20_7KO(11:100) - CalyxData7KO(11:100,3)).^2 + (hz_50_7KO(11:100) - CalyxData7KO(11:100,4)).^2 + (hz_100_7KO(11:100) - CalyxData7KO(11:100,5)).^2 + (hz_200_7KO(11:100) - CalyxData7KO(11:100,6)).^2) + 10*sum((hz_10_7KO(101:111) - CalyxData7KO(101:111,2)).^2 + (hz_20_7KO(101:111) - CalyxData7KO(101:111,3)).^2 + (hz_50_7KO(101:111) - CalyxData7KO(101:111,4)).^2 + (hz_100_7KO(101:111) - CalyxData7KO(101:111,5)).^2 + (hz_200_7KO(101:111) - CalyxData7KO(101:111,6)).^2));
+% 
+% err = (err_WT + err_3KO + err_7KO + err_DKO)/4;
+% 
+% cost = err + abs(err - err_WT)/25+ abs(err - err_3KO)/25+ abs(err - err_7KO)/25+ abs(err - err_DKO)/25;
+% 
+% disp(['Cost = ', num2str(cost), ', average error = ', num2str(err), ', WT error = ', num2str(err_WT), ', 3KO error = ', num2str(err_3KO), ', 7KO error = ', num2str(err_7KO), ', DKO error = ', num2str(err_DKO)])
+err=err_DKO;
+cost = err;
+disp(['Cost = ', num2str(cost), ', Error = ', num2str(err)])
 function [ts, state, Fused] = stim_sim(stimulus_times, max_time, p_release, k_docking, k_undocking, SS, reserve_size, k_refill, Syt3, Syt7)
 
     delta_t = 1e-2; %ms

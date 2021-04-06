@@ -253,7 +253,7 @@ rec = [50 100 200 350 500 750 1000 2000 5000 10000];
 
 figure('Name','Simulated vs Collected Data','NumberTitle','off')
 subplot(5,2,1)
-plot(CFDataWT(1:20,1),'-k')
+plot(CFDataWT(1:20,1),'kx')
 title('WT 1 Hz')
 xlabel('Pulse #')
 ylabel('Peak EPSC')
@@ -264,7 +264,7 @@ plot(hz_1_WT,'ko','Markersize',5)
 legend({'Data','Simulation'},'Location','Best')
 
 subplot(5,2,3)
-plot(CFDataWT(1:20,2),'-k')
+plot(CFDataWT(1:20,2),'kx')
 title('WT 10 Hz')
 xlabel('Pulse #')
 ylabel('Peak EPSC')
@@ -274,7 +274,7 @@ hold on
 plot(hz_10_WT,'ko','Markersize',5)
 
 subplot(5,2,5)
-plot(CFDataWT(1:20,3),'-k')
+plot(CFDataWT(1:20,3),'kx')
 title('WT 20 Hz')
 xlabel('Pulse #')
 ylabel('Peak EPSC')
@@ -284,7 +284,7 @@ hold on
 plot(hz_20_WT,'ko','Markersize',5)
 
 subplot(5,2,7)
-plot(CFDataWT(1:20,4),'-k')
+plot(CFDataWT(1:20,4),'kx')
 title('WT 50 Hz')
 xlabel('Pulse #')
 ylabel('Peak EPSC')
@@ -294,7 +294,7 @@ hold on
 plot(hz_50_WT(1:20),'ko','Markersize',5)
 
 subplot(5,2,9)
-semilogx(rec,CFDataWT(21:30,4),'-k')
+semilogx(rec,CFDataWT(21:30,4),'kx')
 title('WT 50 Hz Recovery')
 xlabel('t (ms)')
 ylabel('Peak EPSC')
@@ -304,7 +304,7 @@ hold on
 semilogx(rec,hz_50_WT(21:30),'ko','Markersize',5)
 
 subplot(5,2,2)
-plot(CFDataKO(1:20,1),'-k')
+plot(CFDataKO(1:20,1),'kx')
 title('KO 1 Hz')
 xlabel('Pulse #')
 ylabel('Peak EPSC')
@@ -314,7 +314,7 @@ hold on
 plot(hz_1_KO,'ko','Markersize',5)
 
 subplot(5,2,4)
-plot(CFDataKO(1:20,2),'-k')
+plot(CFDataKO(1:20,2),'kx')
 title('KO 10 Hz')
 xlabel('Pulse #')
 ylabel('Peak EPSC')
@@ -324,7 +324,7 @@ hold on
 plot(hz_10_KO,'ko','Markersize',5)
 
 subplot(5,2,6)
-plot(CFDataKO(1:20,3),'-k')
+plot(CFDataKO(1:20,3),'kx')
 title('KO 20 Hz')
 xlabel('Pulse #')
 ylabel('Peak EPSC')
@@ -334,7 +334,7 @@ hold on
 plot(hz_20_KO,'ko','Markersize',5)
 
 subplot(5,2,8)
-plot(CFDataKO(1:20,4),'-k')
+plot(CFDataKO(1:20,4),'kx')
 title('KO 50 Hz')
 xlabel('Pulse #')
 ylabel('Peak EPSC')
@@ -344,7 +344,7 @@ hold on
 plot(hz_50_KO(1:20),'ko','Markersize',5)
 
 subplot(5,2,10)
-semilogx(rec,CFDataKO(21:30,4),'-k')
+semilogx(rec,CFDataKO(21:30,4),'kx')
 title('KO 50 Hz Recovery')
 xlabel('t (ms)')
 ylabel('Peak EPSC')
